@@ -1,3 +1,7 @@
+2002-01-30  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/Makefile.am: Added header files to be included...
+
 2002-01-12  Hiroshi Takekawa  <sian@fennel.org>
 
 	* README, README.j: Updated.

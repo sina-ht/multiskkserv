@@ -1,5 +1,20 @@
 2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
 
+	* src/multiskkserv.c: Fixed protocol errors. Implemented
+	connection statistics measurement. Implemented the connection
+	number control. Added -b option. Create threads detached when
+	daemon mode. Fixed the critical error that skkconn is not
+	duplicated, which is passed to a server thread.
+
+	* configure.in: Compatibility and copyright notice.
+
+	* README, README.j: Instruct to specify the cdb directory with the
+	full path.
+
+	* config.h.in: Deleted an auto-generated file.
+
+2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+
 	* autogen.sh: More sophisticated operation.
 
 2001-02-11  Hiroshi Takekawa  <sian@fennel.org>

@@ -1,51 +1,60 @@
 multiskkserv -- simple skk multi-dictionary server
-(C)Copyright 2001 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Tue Feb 13 11:14:49 2001.
+(C) Copyright 2001, 2002 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Sun Jan 13 05:58:37 2002.
 $Id$
 
-multiskkserv¤ÏÊ£¿ô¤Î¼­½ñ¤ò°·¤¨¤ë¼­½ñ¥µ¡¼¥Ð¤Ç¤¹¡£multiskkserv¤Ï¼­½ñ¤Î
-¥Õ¥©¡¼¥Þ¥Ã¥È¤È¤·¤Æ¡¢Dan  J. Bernstein¤Ë¤è¤ë¸ÇÄê¥Ç¡¼¥¿¥Ù¡¼¥¹cdb¤òºÎÍÑ¤·
-¤Æ¤¤¤Þ¤¹¡£¤³¤Îcdb¤Ï¡¢¥·¥¹¥Æ¥à¤Ë¥¤¥ó¥¹¥È¡¼¥ë¤µ¤ì¤¿¸ÇÄê¼­½ñ¤òÊÝ»ý¤¹¤ë¤Î
-¤Ë¸þ¤¤¤Æ¤¤¤ë¤È»×¤ï¤ì¤Þ¤¹¡£
+multiskkserv ¤ÏÊ£¿ô¤Î¼­½ñ¤ò°·¤¨¤ë¼­½ñ¥µ¡¼¥Ð¤Ç¤¹¡£ multiskkserv ¤Ï¼­½ñ
+¤Î¥Õ¥©¡¼¥Þ¥Ã¥È¤È¤·¤Æ¡¢ Dan J. Bernstein ¤Ë¤è¤ë¸ÇÄê¥Ç¡¼¥¿¥Ù¡¼¥¹ cdb ¤ò
+ºÎÍÑ¤·¤Æ¤¤¤Þ¤¹¡£¤³¤Î cdb ¤Ï¡¢¥·¥¹¥Æ¥à¤Ë¥¤¥ó¥¹¥È¡¼¥ë¤µ¤ì¤¿¸ÇÄê¼­½ñ¤òÊÝ
+»ý¤¹¤ë¤Î¤Ë¸þ¤¤¤Æ¤¤¤ë¤È»×¤ï¤ì¤Þ¤¹¡£
 
-¤³¤Î¥½¥Õ¥È¥¦¥§¥¢¤Ï»î¸³Åª¤Ê¤â¤Î¤Ç¤¹¡£¥Ð¥°¥ì¥Ý¡¼¥È¤ä¥³¥á¥ó¥È¤Ê¤É¤ò¤ª´ê¤¤¤·¤Þ¤¹¡£
-¾¯¤Ê¤¯¤È¤â¡¢¤³¤ÎREADME¤Ïmultiskkserv¤ò¼­½ñ¥µ¡¼¥Ð¤È¤·¤Æ»È¤Ã¤Æ½ñ¤±¤Æ¤¤¤Þ¤¹¡£
+¤³¤Î¥½¥Õ¥È¥¦¥§¥¢¤Ï»î¸³Åª¤Ê¤â¤Î¤Ç¤¹¡£¥Ð¥°¥ì¥Ý¡¼¥È¤ä¥³¥á¥ó¥È¤Ê¤É¤ò¤ª´ê¤¤
+¤·¤Þ¤¹¡£¾¯¤Ê¤¯¤È¤â¡¢¤³¤Î README ¤Ï multiskkserv ¤ò¼­½ñ¥µ¡¼¥Ð¤È¤·¤Æ»È¤Ã
+¤Æ½ñ¤±¤Æ¤¤¤Þ¤¹¡£
+
 
 1. É¬Í×¤Ê´Ä¶­
 
 pthread:
- ¤â¤·libc5¤ò»È¤Ã¤Æ¤¤¤ì¤Ð¡¢linuxthread¤ò¤¤¤ì¤Æ¤¯¤À¤µ¤¤¡£
+ ¤â¤· libc5 ¤ò»È¤Ã¤Æ¤¤¤ì¤Ð¡¢ linuxthread ¤ò¤¤¤ì¤Æ¤¯¤À¤µ¤¤¡£
  http://pauillac.inria.fr/~xleroy/linuxthreads/
  ¤¢¤¿¤ê¤Ç¤ß¤Ä¤«¤ë¤Ç¤·¤ç¤¦¡£
 
 cdb-0.75:
- cdb¤Î¥Ñ¥Ã¥±¡¼¥¸¤ò¥¤¥ó¥¹¥È¡¼¥ë¤Ï¤·¤Ê¤¯¤Æ¤â¤¤¤¤¤Î¤Ç¡¢¥³¥ó¥Ñ¥¤¥ë¤À¤±¤·¤Æ
- ¤¯¤À¤µ¤¤¡£¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ì¤Ð¤­¤Ã¤ÈÌò¤ËÎ©¤Ä¤È¤Ï»×¤¤¤Þ¤¹¤¬¡£
+ cdb ¤Î¥Ñ¥Ã¥±¡¼¥¸¤ò¥¤¥ó¥¹¥È¡¼¥ë¤Ï¤·¤Ê¤¯¤Æ¤â¤¤¤¤¤Î¤Ç¡¢¥³¥ó¥Ñ¥¤¥ë¤À¤±¤·
+ ¤Æ¤¯¤À¤µ¤¤¡£¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ì¤Ð¤­¤Ã¤ÈÌò¤ËÎ©¤Ä¤È¤Ï»×¤¤¤Þ¤¹¤¬¡£
  http://cr.yp.to/cdb/cdb-0.75.tar.gz ¤òÆþ¼ê¤·¤Æ¡¢
  Å¸³«¤·¡¢¤½¤ÎÃæ¤Ë°ÜÆ°¤·¤Æ¡¢'make it'¤ò¼Â¹Ô¤·¤Æ¤¯¤À¤µ¤¤¡£
  'make setup check'¤È¤·¤Æ¥¤¥ó¥¹¥È¡¼¥ë¤¹¤ë¤³¤È¤â¤Ç¤­¤Þ¤¹¡£
+
 
 2. ¥³¥ó¥Ñ¥¤¥ë¤ª¤è¤Ó¥¤¥ó¥¹¥È¡¼¥ë
 
 --with-cdb ¤Ç cdb ¤òÅ¸³«¤·¥³¥ó¥Ñ¥¤¥ë¤·¤¿¥Ç¥£¥ì¥¯¥È¥ê¤ò¥Õ¥ë¥Ñ¥¹¤Ç»ØÄê¤·
 ¤Æ¤¯¤À¤µ¤¤¡£
 
-% tar xvzf multiskkserv-2001xxxx.tar.gz
+% tar xvzf multiskkserv-2002xxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build
-% ../multiskkserv-2001xxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
+% ../multiskkserv-2002xxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
 % su
 # make install
 # exit
 % cd ..
 % rm -rf multiskkserv.build
 
+'make install'¤¹¤ë¤È¡¢ 3 ¤Ä¤Î¥Ð¥¤¥Ê¥ê¤¬¥¤¥ó¥¹¥È¡¼¥ë¤µ¤ì¤Þ¤¹¡£
+multiskkserv, multiskkserv-ctl ¤¬ sbin ¤Ë¡¢ skkdic-p2cdb ¤¬ bin ¤ËÆþ¤ê
+¤Þ¤¹¡£
+
+
 3. ¼­½ñ¤ÎÊÑ´¹
 
-'make install'¤¹¤ë¤È¡¢2¤Ä¤Î¥Ð¥¤¥Ê¥ê¤¬¥¤¥ó¥¹¥È¡¼¥ë¤µ¤ì¤Þ¤¹¡£
-multiskkserv¤¬sbin¤Ë¡¢skkdic-p2cdb¤¬bin¤ËÆþ¤ê¤Þ¤¹¡£skkdic-p2cdb¤ò»È¤Ã¤Æ¥×¥ì¡¼¥ó¥Æ¥­¥¹¥È¤Î¼­½ñ¤òcdb·Á¼°¤ËÊÑ´¹¤·¤Þ¤¹¡£¤ä¤êÊý¤Ï´ÊÃ±¤Ç¤¹¡£
+skkdic-p2cdb ¤ò»È¤Ã¤Æ¥×¥ì¡¼¥ó¥Æ¥­¥¹¥È¤Î¼­½ñ¤ò cdb ·Á¼°¤ËÊÑ´¹¤·¤Þ¤¹¡£¤ä
+¤êÊý¤Ï´ÊÃ±¤Ç¤¹¡£
 
-% cd /usr/local/share/skk
-% skkdic-p2cdb SKK-JISYO.L.cdb < SKK-JISYO.L.cdb
+# cd /usr/local/share/skk
+# skkdic-p2cdb SKK-JISYO.L.cdb < SKK-JISYO.L
+
 
 4. ¥µ¡¼¥Ð¤Îµ¯Æ°
 
@@ -53,12 +62,17 @@ multiskkserv¤¬sbin¤Ë¡¢skkdic-p2cdb¤¬bin¤ËÆþ¤ê¤Þ¤¹¡£skkdic-p2cdb¤ò»È¤Ã¤Æ¥×¥ì¡¼¥ó¥
 
 # /usr/local/sbin/multiskkserv /usr/local/share/skk/SKK-JISYO.L.cdb &
 
-multiskkserv¤Ï¼«Æ°¤Çdetach¤·¤Ê¤¤¤Î¤Ç&¤ò¤Ä¤±¤ëÉ¬Í×¤¬¤¢¤ê¤Þ¤¹¡£
+multiskkserv ¤Ï¼«Æ°¤Ç detach ¤·¤Ê¤¤¤Î¤Ç&¤ò¤Ä¤±¤ëÉ¬Í×¤¬¤¢¤ê¤Þ¤¹¡£
 Ê£¿ô¤Î¼­½ñ¤ò»ØÄê¤¹¤ë¤³¤È¤â¤Ç¤­¤Þ¤¹¡£
 
 # /usr/local/sbin/multiskkserv /usr/local/share/skk/SKK-JISYO.L.cdb /usr/local/share/skk/SKK-JISYO.zipcode.cdb &
 
--n¤ò»È¤¨¤Ðinetd¤ätcpserver¤«¤é¤â¤ª¤½¤é¤¯»È¤¨¤ë¤Ï¤º¤Ç¤¹¡£(Ì¤³ÎÇ§)
+¥»¥­¥å¥ê¥Æ¥£¤¬µ¤¤Ë¤Ê¤ë¤È¤¤¤¦Êý¤Ï¡¢°ìÈÌ¥æ¡¼¥¶¤Çµ¯Æ°¤·¡¢¤µ¤é¤Ë chroot ¤µ
+¤»¤ë -r ¤ò¤Ä¤±¤ë¤È¤¤¤¤¤Ç¤·¤ç¤¦¡£
+
+% /usr/local/sbin/multiskkserv -r /usr/local/share/skk SKK-JISYO.L.cdb &
+
+-n ¤ò»È¤¨¤Ð inetd ¤ä tcpserver ¤«¤é¤â¤ª¤½¤é¤¯»È¤¨¤ë¤Ï¤º¤Ç¤¹¡£ (Ì¤³ÎÇ§)
 
 inetd.conf:
 skkserv stream  tcp     nowait  nobody  /usr/sbin/tcpd /usr/local/sbin/multiskkserv -n /usr/local/share/skk/SKK-JISYO.L.cdb
@@ -72,10 +86,20 @@ tcpserver -v -R 0 skkserv /usr/local/sbin/multiskkserv -n /usr/local/share/skk/S
 
 ¤È¤¹¤ë¤ÈÉ½¼¨¤µ¤ì¤Þ¤¹¡£
 
-5. ¥é¥¤¥»¥ó¥¹
 
-GPL version 2¤Ë½¾¤¤¤Þ¤¹¡£¾ÜºÙ¤ÏCOPYING(»²¹ÍÌõ COPYING.j)¤òÆÉ¤ó¤Ç¤¯¤À¤µ¤¤¡£
+5. ²ÔÆ¯¾ðÊó¤Î³ÎÇ§
 
-6. Ï¢ÍíÀè
+% /usr/local/sbin/multiskkserv-ctl -s hostname stat
+
+¤È¤¹¤ë¤È¡¢ÀÜÂ³²ó¿ô¤È¸½ºßÀÜÂ³¤µ¤ì¤Æ¤¤¤ë¥¯¥é¥¤¥¢¥ó¥È¤Î¿ô¤òÉ½¼¨¤·¤Þ¤¹¡£¤³
+¤ì¤Ë¤Ï skkserv ¤Î protocol ¤ÎÆÈ¼« extension ¤¬»È¤ï¤ì¤Æ¤¤¤Þ¤¹¡£
+
+
+6. ¥é¥¤¥»¥ó¥¹
+
+GPL version 2 ¤Ë½¾¤¤¤Þ¤¹¡£¾ÜºÙ¤Ï COPYING (»²¹ÍÌõ COPYING.j) ¤òÆÉ¤ó¤Ç¤¯¤À¤µ¤¤¡£
+
+
+7. Ï¢ÍíÀè
 
 E-mail: Hiroshi Takekawa <sian@big.or.jp>

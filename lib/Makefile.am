@@ -7,4 +7,5 @@ INCLUDES = -I$(top_srcdir)
 
 libutils_la_SOURCES = \
 	libstring.c libstring.h \
-	dlist.c dlist.h
+	dlist.c dlist.h \
+	hash.c hash.h

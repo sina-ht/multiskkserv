@@ -9,14 +9,18 @@ sbin_PROGRAMS = multiskkserv multiskkserv-ctl
 
 if HAVE_GETADDRINFO
 multiskkserv_SOURCES = \
-	multiskkserv.c getopt-support.c
+	multiskkserv.c multiskkserv.h \
+	getopt-support.c getopt-support.h
 multiskkserv_ctl_SOURCES = \
-	multiskkserv-ctl.c getopt-support.c
+	multiskkserv-ctl.c multiskkserv.h \
+	getopt-support.c getopt-support.h
 else
 multiskkserv_SOURCES = \
-	multiskkserv.c getopt-support.c getaddrinfo.c
+	multiskkserv.c multiskkserv.h \
+	getopt-support.c getopt-support.h getaddrinfo.c
 multiskkserv_ctl_SOURCES = \
-	multiskkserv-ctl.c getopt-support.c getaddrinfo.c
+	multiskkserv-ctl.c multiskkserv.h \
+	getopt-support.c getopt-support.h getaddrinfo.c
 endif
 
 multiskkserv_LDADD = \

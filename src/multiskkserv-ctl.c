@@ -3,7 +3,7 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Sun Jan 13 05:29:31 2002.
+ * Last Modified: Fri Feb  1 13:26:51 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -260,7 +260,10 @@ main(int argc, char **argv)
   if (strcasecmp(argv[optind], "help") == 0) {
     usage();
   } else if (strcasecmp(argv[optind], "stat") == 0) {
+    if (!servername)
+      servername = strdup("localhost");
     show_stat(servername, port, family);
+    free(servername);
   } else {
     usage();
     return 1;

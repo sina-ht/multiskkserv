@@ -1,6 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
 (C)Copyright 2001 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Mon Feb 12 04:29:46 2001.
+Last Modified: Tue Feb 13 11:14:49 2001.
 $Id$
 
 multiskkservは複数の辞書を扱える辞書サーバです。multiskkservは辞書の
@@ -27,7 +27,8 @@ cdb-0.75:
 
 2. コンパイルおよびインストール
 
---with-cdb で cdb を展開しコンパイルしたディレクトリを指定してください。
+--with-cdb で cdb を展開しコンパイルしたディレクトリをフルパスで指定し
+てください。
 
 % tar xvzf multiskkserv-2001xxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build

@@ -1,6 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
 (C)Copyright 2001 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Mon Feb 12 04:26:55 2001.
+Last Modified: Tue Feb 13 11:14:36 2001.
 $Id$
 
 If you think my English is so bad, please correct.
@@ -30,7 +30,8 @@ cdb-0.75:
 
 2. Build and install
 
-Specify the directory where you unpacked cdb distribution by --with-cdb.
+Specify the full path of the directory where you unpacked cdb
+distribution by --with-cdb.
 
 % tar xvzf multiskkserv-2001xxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build

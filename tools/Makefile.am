@@ -2,7 +2,7 @@
 # Makefile.am for multiskkserv
 # $Id$
 
-INCLUDES = @CDB_DIR@ -I$(top_srcdir)
+INCLUDES = @CDB_INCLUDES@ -I$(top_srcdir)
 
 bin_PROGRAMS = skkdic-p2cdb
 skkdic_p2cdb_SOURCES = \

@@ -3,7 +3,7 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Feb  1 02:29:23 2002.
+ * Last Modified: Fri Feb  1 10:41:31 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -243,8 +243,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
   char result[SKKSERV_RESULT_SIZE];
   char tmpresult[SKKSERV_RESULT_SIZE];
   char *end;
-  int emit_result = 0;
-  int i, p, r, len, rlen;
+  int i, p, r, len, rlen, ncandidates;
 
   if ((end = strchr(rbuf + 1, ' ')) == NULL) {
     rbuf[0] = SKKSERV_S_ERROR;
@@ -259,6 +258,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 
   word_hash = hash_create(HASH_SIZE);
   rlen = 1;
+  ncandidates = 0;
   result[0] = SKKSERV_S_FOUND;
   dlist_iter(dic_list, dd) {
     Dictionary *dic = dlist_data(dd);
@@ -267,7 +267,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
     cdb_findstart(&dic->cdb);
     if ((r = cdb_findnext(&dic->cdb, word, len)) == -1) {
       fprintf(stderr, "cdb_findnext() failed.\n");
-      if (!emit_result) {
+      if (!ncandidates) {
 	rbuf[0] = SKKSERV_S_ERROR;
 	write(out, rbuf, strlen(rbuf));
       }
@@ -276,7 +276,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
       return;
     }
     if (r) {
-      debug_message("%s: %s found(%d)\n", __FUNCTION__, word, emit_result);
+      debug_message("%s: %s found(%d)\n", __FUNCTION__, word, ncandidates);
       if (rlen + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
 	fprintf(stderr, "Truncated: %s\n", word);
 	r = SKKSERV_RESULT_SIZE - rlen - 2;
@@ -284,7 +284,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	r = cdb_datalen(&dic->cdb);
       }
       if (cdb_read(&dic->cdb, tmpresult, r, cdb_datapos(&dic->cdb)) == -1) {
-	if (!emit_result) {
+	if (!ncandidates) {
 	  fprintf(stderr, "cdb_read() failed.\n");
 	  rbuf[0] = SKKSERV_S_ERROR;
 	  write(out, rbuf, strlen(rbuf));
@@ -306,6 +306,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	      hash_define(word_hash, tmpresult + p + 1, i - p - 1, (void *)1) == 1) {
 	    memcpy(result + rlen, tmpresult + p, i - p);
 	    rlen += i - p;
+	    ncandidates++;
 	  }
 	  p = i;
 	}
@@ -320,15 +321,15 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	result[rlen + r] = '\0';
 	rlen += r;
       }
+      ncandidates++;
 #endif
-      emit_result++;
     }
     pthread_mutex_unlock(&dic->mutex);
   }
 
   hash_destroy(word_hash, 0);
 
-  if (rlen) {
+  if (ncandidates) {
     result[rlen] = '/';
     result[rlen + 1] = '\n';
     result[rlen + 2] = '\0';

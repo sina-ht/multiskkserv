@@ -1,3 +1,9 @@
+2002-02-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/multiskkserv.c: The last fix introduced a new bug, returns
+	SKKSERV_S_FOUND with null string when no entry is found. Fixed to
+	return SKKSERV_S_NOT_FOUND.
+
 2002-01-31  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/multiskkserv.c: Merge the same yomi entries.

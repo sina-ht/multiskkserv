@@ -1,9 +1,9 @@
 /*
  * multiskkserv.c -- simple skk multi-dictionary server
- * (C)Copyright 2001 by Hiroshi Takekawa
+ * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Tue Mar 13 12:58:42 2001.
+ * Last Modified: Sun Jan 13 05:45:35 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -36,11 +36,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <cdb.h>
-
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
+
+#include <cdb.h>
 
 #ifndef HAVE_GETADDRINFO
 #  include "getaddrinfo.h"
@@ -49,33 +49,8 @@
 #include "dlist.h"
 #include "libstring.h"
 
-#define SKKSERV_SERVICE      "skkserv"
-#define SKKSERV_WORD_SIZE    1023
-#define SKKSERV_RESULT_SIZE  2048
-#define SKKSERV_REQUEST_SIZE (SKKSERV_WORD_SIZE + 1)
-
-#define SKKSERV_PORT         1178 /* can be specified by -p */
-#define SKKSERV_BACKLOG      8    /* can be specified by -b */
-
-#define SKKSERV_MAX_THREADS  16   /* Should be specified via option? */
-#define SKKSERV_EXTENDED     1    /* This enables the statistic query. */
-
-/* skkserv protocol */
-#define SKKSERV_C_END       '0'
-#define SKKSERV_C_REQUEST   '1'
-#define SKKSERV_C_VERSION   '2'
-#define SKKSERV_C_HOST      '3'
-#ifdef SKKSERV_EXTENDED
-# define SKKSERV_C_STAT      'S'
-#endif
-
-#define SKKSERV_S_ERROR     '0'
-#define SKKSERV_S_FOUND     '1'
-#define SKKSERV_S_NOT_FOUND '4'
-#define SKKSERV_S_FULL      '9'
-#ifdef SKKSERV_EXTENDED
-# define SKKSERV_S_STAT      'S'
-#endif
+#include "multiskkserv.h"
+#include "getopt-support.h"
 
 #define BIND_ERROR 1
 #define ACCEPT_ERROR 2
@@ -86,19 +61,6 @@
 #define INVALID_FAMILY_ERROR 7
 #define CHDIR_ERROR 8
 #define CHROOT_ERROR 9
-
-typedef enum _argument_requirement {
-  _NO_ARGUMENT,
-  _REQUIRED_ARGUMENT,
-  _OPTIONAL_ARGUMENT
-} ArgumentRequirement;
-
-typedef struct _option {
-  const char *longopt; /* not supported so far */
-  char opt;
-  ArgumentRequirement argreq;
-  const unsigned char *description;
-} Option;
 
 static Option options[] = {
   { "help",     'h', _NO_ARGUMENT,       "Show help message." },
@@ -137,50 +99,12 @@ typedef struct _skkconnection {
 static void
 usage(void)
 {
-  int i;
-
   printf(PROGNAME " version " VERSION "\n");
-  printf("(C)Copyright 2001 by Hiroshi Takekawa\n\n");
+  printf("(C)Copyright 2001, 2002 by Hiroshi Takekawa\n\n");
   printf("usage: multiskkserv [options] [path...]\n");
 
   printf("Options:\n");
-  i = 0;
-  while (options[i].longopt != NULL) {
-    printf(" %c(%s): \t%s\n",
-	   options[i].opt, options[i].longopt, options[i].description);
-    i++;
-  }
-}
-
-static char *
-gen_optstring(Option opt[])
-{
-  int i;
-  String *s;
-  char *optstr;
-
-  s = string_create();
-  i = 0;
-  while (opt[i].longopt != NULL) {
-    string_cat_ch(s, opt[i].opt);
-    switch (opt[i].argreq) {
-    case _NO_ARGUMENT:
-      break;
-    case _REQUIRED_ARGUMENT:
-      string_cat(s, ":");
-      break;
-    case _OPTIONAL_ARGUMENT:
-      string_cat(s, "::");
-      break;
-    }
-    i++;
-  }
-
-  optstr = strdup(string_get(s));
-
-  string_destroy(s);
-
-  return optstr;
+  print_option_usage(options);
 }
 
 static int
@@ -210,7 +134,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
     sbuf[sizeof(sbuf) - 1] = '\0';
     try_default_portnum = 0;
   } else {
-    strncpy(sbuf, SKKSERV_SERVICE, sizeof(sbuf));
+    strncpy(sbuf, service, sizeof(sbuf));
     try_default_portnum = 1;
   }
 
@@ -227,7 +151,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
 	continue;
       }
 #ifdef HAVE_GETADDRINFO
-      fprintf(stderr, "getaddrinfo(): %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
+      fprintf(stderr, PROGNAME ": getaddrinfo: %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
 #endif
       return -2;
     }
@@ -243,6 +167,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
 	fprintf(stderr, "getnameinfo(): %s\n", gai_strerror(gaierr));
 	if (res0)
 	  freeaddrinfo(res0);
+	close(gs);
 	return -3;
       }
 #else
@@ -255,13 +180,13 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
       opt = 1;
       setsockopt(gs, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
       if (bind(gs, res->ai_addr, res->ai_addrlen)) {
-	perror(PROGNAME);
+	perror(PROGNAME ": bind");
 	close(gs);
 	gs = -1;
 	continue;
       }
       if (listen(gs, nbacklogs)) {
-	perror(PROGNAME);
+	perror(PROGNAME ": listen");
 	close(gs);
 	gs = -1;
 	continue;
@@ -296,7 +221,7 @@ open_dictionary(char *path)
     return NULL;
 
   if ((dic->fd = open(path, O_RDONLY)) == -1) {
-    perror(PROGNAME);
+    perror(PROGNAME ": open");
     return NULL;
   }
 
@@ -325,7 +250,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
   memcpy(word, rbuf + 1, len);
   word[len] = '\0';
 
-  debug_message(__FUNCTION__ ": word %s\n", word);
+  debug_message("%s: word %s\n", __FUNCTION__, word);
 
   dlist_iter(dic_list, dd) {
     Dictionary *dic = dlist_data(dd);
@@ -342,7 +267,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
       return;
     }
     if (r) {
-      debug_message(__FUNCTION__ ": %s found\n", word);
+      debug_message("%s: %s found\n", __FUNCTION__, word);
       if (!emit_result) {
 	if (1 + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
 	  fprintf(stderr, "Truncated: %s\n", word);
@@ -415,7 +340,7 @@ skkserver(void *arg)
   char rbuf[SKKSERV_REQUEST_SIZE];
   int read_size;
 
-  debug_message(__FUNCTION__ ": client = %s\n", conn->peername);
+  debug_message("%s: client = %s\n", __FUNCTION__, conn->peername);
 
   while ((read_size = read(conn->in, rbuf, SKKSERV_REQUEST_SIZE - 1)) > 0) {
     rbuf[read_size] = '\0';
@@ -584,11 +509,11 @@ main(int argc, char **argv)
 
   if (chrootdir) {
     if (chdir(chrootdir)) {
-      perror(PROGNAME);
+      perror(PROGNAME ": chdir");
       return CHDIR_ERROR;
     }
     if (chroot(chrootdir)) {
-      perror(PROGNAME);
+      perror(PROGNAME ": chroot");
       return CHROOT_ERROR;
     }
   }
@@ -621,7 +546,7 @@ main(int argc, char **argv)
 
       salen = sizeof(sa);
       if ((s = accept(gs, &sa, &salen)) == -1) {
-	perror("accept: ");
+	perror(PROGNAME ": accept");
 	close(gs);
 	return ACCEPT_ERROR;
       }
@@ -633,7 +558,7 @@ main(int argc, char **argv)
 
       splen = sizeof(sp);
       if ((getpeername(s, &sp, &splen)) < 0) {
-	perror("getpeername: ");
+	perror(PROGNAME ": getpeername");
 	memset(&sp, 0, sizeof(sp));
       }
       ipbuf[0] = '\0';

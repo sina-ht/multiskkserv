@@ -3,7 +3,7 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Tue Feb 13 22:44:32 2001.
+ * Last Modified: Tue Mar 13 12:58:42 2001.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <pthread.h>
 
@@ -76,6 +77,16 @@
 # define SKKSERV_S_STAT      'S'
 #endif
 
+#define BIND_ERROR 1
+#define ACCEPT_ERROR 2
+#define NO_DICTIONARY_ERROR 3
+#define MEMORY_ERROR 4
+#define INVALID_PORT_ERROR 5
+#define INVALID_NUMBER_ERROR 6
+#define INVALID_FAMILY_ERROR 7
+#define CHDIR_ERROR 8
+#define CHROOT_ERROR 9
+
 typedef enum _argument_requirement {
   _NO_ARGUMENT,
   _REQUIRED_ARGUMENT,
@@ -94,6 +105,8 @@ static Option options[] = {
   { "server",   's', _REQUIRED_ARGUMENT, "Specify which ip to listen." },
   { "port",     'p', _REQUIRED_ARGUMENT, "Specify which port to listen." },
   { "backlog",  'b', _REQUIRED_ARGUMENT, "Specify how many backlogs to listen." },
+  { "root",     'r', _REQUIRED_ARGUMENT, "chroot() to the specified directory." },
+  { "family",   'f', _REQUIRED_ARGUMENT, "Specify address family: INET or INET6 or UNSPEC." },
   { "nodaemon", 'n', _NO_ARGUMENT,       "To be invoked from inetd, tcpserver or such." },
   { NULL }
 };
@@ -171,7 +184,7 @@ gen_optstring(Option opt[])
 }
 
 static int
-prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs)
+prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs, int family)
 {
   String *s;
   struct addrinfo hints, *res0, *res;
@@ -193,7 +206,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs)
   string_cat(s, ":");
 
   if (port > -1) {
-    sprintf(sbuf, "%d", port);
+    snprintf(sbuf, sizeof(sbuf), "%d", port);
     sbuf[sizeof(sbuf) - 1] = '\0';
     try_default_portnum = 0;
   } else {
@@ -203,22 +216,24 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs)
 
   for (;;) {
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = family;
     hints.ai_socktype = SOCK_STREAM;
-    res = res0 = NULL;
+    res0 = NULL;
     if ((gaierr = getaddrinfo(servername, sbuf, &hints, &res0))) {
       if (gaierr == EAI_SERVICE && try_default_portnum) {
-	sprintf(sbuf, "%d", port);
+	snprintf(sbuf, sizeof(sbuf), "%d", SKKSERV_PORT);
 	sbuf[sizeof(sbuf) - 1] = '\0';
 	try_default_portnum = 0;
 	continue;
       }
 #ifdef HAVE_GETADDRINFO
-      fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(gaierr));
+      fprintf(stderr, "getaddrinfo(): %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
 #endif
       return -2;
     }
     for (res = res0; res; res = res->ai_next) {
+      if (res->ai_family != AF_INET && res->ai_family != AF_INET6)
+	continue;
       if ((gs = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
 	continue;
       ipbuf[0] = '\0';
@@ -240,11 +255,13 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs)
       opt = 1;
       setsockopt(gs, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
       if (bind(gs, res->ai_addr, res->ai_addrlen)) {
+	perror(PROGNAME);
 	close(gs);
 	gs = -1;
 	continue;
       }
       if (listen(gs, nbacklogs)) {
+	perror(PROGNAME);
 	close(gs);
 	gs = -1;
 	continue;
@@ -279,7 +296,7 @@ open_dictionary(char *path)
     return NULL;
 
   if ((dic->fd = open(path, O_RDONLY)) == -1) {
-    perror("multiskkserv: ");
+    perror(PROGNAME);
     return NULL;
   }
 
@@ -493,10 +510,13 @@ main(int argc, char **argv)
   char *optstr;
   char *servername = NULL;
   char *serverstring;
+  char *chrootdir = NULL;
   int i, ch;
   int port = -1;
   int daemon = 1;
   int nbacklogs = SKKSERV_BACKLOG;
+  int family = AF_INET;
+  int gs;
 
   optstr = gen_optstring(options);
   while ((ch = getopt(argc, argv, optstr)) != -1) {
@@ -510,15 +530,38 @@ main(int argc, char **argv)
     case 'p':
       port = atoi(optarg);
       if (port < 0 || port > 65535) {
-	fprintf(stderr, "Invalid port number.\n");
-	return 6;
+	fprintf(stderr, "Invalid port number(%d).\n", port);
+	return INVALID_PORT_ERROR;
       }
       break;
     case 'b':
       nbacklogs = atoi(optarg);
       if (nbacklogs < 1 || nbacklogs > 64) {
-	fprintf(stderr, "Invalid number for the number of backlogs.\n");
-	return 7;
+	fprintf(stderr, "Invalid number for the number of backlogs(%d).\n", nbacklogs);
+	return INVALID_NUMBER_ERROR;
+      }
+      break;
+    case 'r':
+      chrootdir = strdup(optarg);
+      break;
+    case 'f':
+      if (strcasecmp("INET", optarg) == 0)
+	family = AF_INET;
+      else if (strcasecmp("INET6", optarg) == 0)
+	family = AF_INET6;
+      else if (strcasecmp("UNSPEC", optarg) == 0)
+	family = AF_UNSPEC;
+      else if (strcasecmp("4", optarg) == 0)
+	family = AF_INET;
+      else if (strcasecmp("6", optarg) == 0)
+	family = AF_INET6;
+      else if (strcasecmp("IPv4", optarg) == 0)
+	family = AF_INET;
+      else if (strcasecmp("IPv6", optarg) == 0)
+	family = AF_INET6;
+      else {
+	fprintf(stderr, "Invalid family(%s).\n", optarg);
+	return INVALID_FAMILY_ERROR;
       }
       break;
     case 'n':
@@ -526,7 +569,27 @@ main(int argc, char **argv)
       break;
     default:
       usage();
-      return 1;
+      return 0;
+    }
+  }
+  free(optstr);
+
+  if (daemon) {
+    if ((gs = prepare_listen(servername, &serverstring, port, (char *)SKKSERV_SERVICE,
+			     nbacklogs, family)) < 0) {
+      fprintf(stderr, "Cannot bind\n");
+      return BIND_ERROR;
+    }
+  }
+
+  if (chrootdir) {
+    if (chdir(chrootdir)) {
+      perror(PROGNAME);
+      return CHDIR_ERROR;
+    }
+    if (chroot(chrootdir)) {
+      perror(PROGNAME);
+      return CHROOT_ERROR;
     }
   }
 
@@ -539,17 +602,10 @@ main(int argc, char **argv)
   }
   if (!dlist_size(dic_list)) {
     fprintf(stderr, "No dictionary.\n");
-    return 4;
+    return NO_DICTIONARY_ERROR;
   }
 
   if (daemon) {
-    int gs;
-
-    if ((gs = prepare_listen(servername, &serverstring, port, (char *)SKKSERV_SERVICE, nbacklogs)) < 0) {
-      fprintf(stderr, "Cannot bind\n");
-      return 2;
-    }
-
     stat.nconns = 0;
     stat.nactives = 0;
     pthread_mutex_init(&stat.mutex, NULL);
@@ -567,12 +623,12 @@ main(int argc, char **argv)
       if ((s = accept(gs, &sa, &salen)) == -1) {
 	perror("accept: ");
 	close(gs);
-	return 3;
+	return ACCEPT_ERROR;
       }
 
       if ((skkconn = calloc(1, sizeof(SkkConnection))) == NULL) {
 	fprintf(stderr, "No enough memory.\n");
-	return 5;
+	return MEMORY_ERROR;
       }
 
       splen = sizeof(sp);
@@ -610,7 +666,7 @@ main(int argc, char **argv)
 
     if ((skkconn = calloc(1, sizeof(SkkConnection))) == NULL) {
       fprintf(stderr, "No enough memory.\n");
-      return 5;
+      return MEMORY_ERROR;
     }
 
     skkconn->peername = strdup("localhost");

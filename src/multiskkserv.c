@@ -3,7 +3,7 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Sun Jan 13 05:45:35 2002.
+ * Last Modified: Fri Feb  1 02:29:23 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -47,6 +47,7 @@
 #endif
 
 #include "dlist.h"
+#include "hash.h"
 #include "libstring.h"
 
 #include "multiskkserv.h"
@@ -70,6 +71,7 @@ static Option options[] = {
   { "root",     'r', _REQUIRED_ARGUMENT, "chroot() to the specified directory." },
   { "family",   'f', _REQUIRED_ARGUMENT, "Specify address family: INET or INET6 or UNSPEC." },
   { "nodaemon", 'n', _NO_ARGUMENT,       "To be invoked from inetd, tcpserver or such." },
+  { "debug",    'd', _NO_ARGUMENT,       "Debug mode (do nothing so far)." },
   { NULL }
 };
 
@@ -231,15 +233,18 @@ open_dictionary(char *path)
   return dic;
 }
 
+#define HASH_SIZE 4096
 static void
 search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 {
   Dlist_data *dd;
+  Hash *word_hash;
   char word[SKKSERV_WORD_SIZE];
   char result[SKKSERV_RESULT_SIZE];
+  char tmpresult[SKKSERV_RESULT_SIZE];
   char *end;
   int emit_result = 0;
-  int r, len, rlen = 0;
+  int i, p, r, len, rlen;
 
   if ((end = strchr(rbuf + 1, ' ')) == NULL) {
     rbuf[0] = SKKSERV_S_ERROR;
@@ -252,6 +257,9 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 
   debug_message("%s: word %s\n", __FUNCTION__, word);
 
+  word_hash = hash_create(HASH_SIZE);
+  rlen = 1;
+  result[0] = SKKSERV_S_FOUND;
   dlist_iter(dic_list, dd) {
     Dictionary *dic = dlist_data(dd);
 
@@ -264,53 +272,61 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	write(out, rbuf, strlen(rbuf));
       }
       pthread_mutex_unlock(&dic->mutex);
+      hash_destroy(word_hash, 0);
       return;
     }
     if (r) {
-      debug_message("%s: %s found\n", __FUNCTION__, word);
-      if (!emit_result) {
-	if (1 + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
-	  fprintf(stderr, "Truncated: %s\n", word);
-	  r = SKKSERV_RESULT_SIZE - 3;
-	} else {
-	  r = cdb_datalen(&dic->cdb);
-	}
-	if (cdb_read(&dic->cdb, result + 1, r, cdb_datapos(&dic->cdb)) == -1) {
+      debug_message("%s: %s found(%d)\n", __FUNCTION__, word, emit_result);
+      if (rlen + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
+	fprintf(stderr, "Truncated: %s\n", word);
+	r = SKKSERV_RESULT_SIZE - rlen - 2;
+      } else {
+	r = cdb_datalen(&dic->cdb);
+      }
+      if (cdb_read(&dic->cdb, tmpresult, r, cdb_datapos(&dic->cdb)) == -1) {
+	if (!emit_result) {
 	  fprintf(stderr, "cdb_read() failed.\n");
 	  rbuf[0] = SKKSERV_S_ERROR;
 	  write(out, rbuf, strlen(rbuf));
 	  pthread_mutex_unlock(&dic->mutex);
+	  hash_destroy(word_hash, 0);
 	  return;
-	}
-	if (result[r] == '/') {
-	  result[r] = '\0';
-	  rlen = r;
 	} else {
-	  result[r + 1] = '\0';
-	  rlen = r + 1;
-	}
-	result[0] = SKKSERV_S_FOUND;
-	emit_result = 1;
-      } else {
-	if (rlen + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
-	  fprintf(stderr, "Truncated: %s\n", word);
-	  r = SKKSERV_RESULT_SIZE - rlen - 2;
-	}
-	if (cdb_read(&dic->cdb, result + rlen, r, cdb_datapos(&dic->cdb)) == -1) {
 	  result[rlen] = '\0';
 	  continue;
 	}
-	if (result[rlen + r] == '/') {
-	  result[rlen + r] = '\0';
-	  rlen += r;
-	} else {
-	  result[rlen + r + 1] = '\0';
-	  rlen += r + 1;
-	}
       }
+
+      /* Merge */
+      p = 0;
+      i = 1;
+      while (i < r) {
+	if (tmpresult[i] == '/') {
+	  if (i - p - 1 > 0 &&
+	      hash_define(word_hash, tmpresult + p + 1, i - p - 1, (void *)1) == 1) {
+	    memcpy(result + rlen, tmpresult + p, i - p);
+	    rlen += i - p;
+	  }
+	  p = i;
+	}
+	i++;
+      }
+#if 0
+      /* Simple concatenation */
+      if (result[rlen + r - 1] == '/') {
+	result[rlen + r - 1] = '\0';
+	rlen += r - 1;
+      } else {
+	result[rlen + r] = '\0';
+	rlen += r;
+      }
+#endif
+      emit_result++;
     }
     pthread_mutex_unlock(&dic->mutex);
   }
+
+  hash_destroy(word_hash, 0);
 
   if (rlen) {
     result[rlen] = '/';
@@ -491,6 +507,9 @@ main(int argc, char **argv)
       break;
     case 'n':
       daemon = 0;
+      break;
+    case 'd':
+      /* for skk-server-debug, though this seems to be needless. */
       break;
     default:
       usage();

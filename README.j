@@ -1,6 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
 (C) Copyright 2001, 2002 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Wed Jan 30 18:55:27 2002.
+Last Modified: Fri Feb  1 02:48:09 2002.
 $Id$
 
 multiskkserv は複数の辞書を扱える辞書サーバです。 multiskkserv は辞書
@@ -108,4 +108,6 @@ E-mail: Hiroshi Takekawa <sian@big.or.jp>
 8. 謝辞
 
 Eiji Obata <obata@suzuki.kuee.kyoto-u.ac.jp>さん:
-20020113 に必要なヘッダファイルが含まれていないことを指摘してくださいました。
+
+ 20020113 に必要なヘッダファイルが含まれていないことを指摘してくださいました。
+ また、同じ読みのエントリがある時にマージされないことを指摘してくださいました。

@@ -1,6 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
 (C)Copyright 2001, 2002 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Wed Jan 30 18:56:24 2002.
+Last Modified: Fri Feb  1 02:46:22 2002.
 $Id$
 
 If you think my English is too bad to read, please correct.
@@ -108,4 +108,7 @@ E-mail: Hiroshi Takekawa <sian@big.or.jp>
 8. Acknowledgement
 
 Thanks to Mr. Eiji Obata <obata@suzuki.kuee.kyoto-u.ac.jp>:
-He informed me that some header files are missing.
+
+ He informed me that some header files are missing.  He also informed
+ me that the same yomi entries from different dictionaries are not
+ merged.

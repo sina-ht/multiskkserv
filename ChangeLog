@@ -1,0 +1,7 @@
+2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+
+	* autogen.sh: More sophisticated operation.
+
+2001-02-11  Hiroshi Takekawa  <sian@fennel.org>
+
+	* multiskkserv -- simple skk multi-dictionary server

@@ -1,4 +1,22 @@
-2001-03-13 Hiroshi Takekawa <sian@fennel.org>
+2002-01-12  Hiroshi Takekawa  <sian@fennel.org>
+
+	* README, README.j: Updated.
+
+	* src/Makefile.am: Added getopt-support, multiskkserv-ctl.
+
+	* src/multiskkserv.c: Use getopt-support.
+
+	* src/getopt-support.c, src/getopt-support.h: New files.
+
+	* tools/Makefile.am: Renamed CDB_DIR to CDB_INCLUDES.
+
+	* src/multiskkserv-ctl.c: New file.
+
+	* src/multiskkserv.h: Separated declarations from multiskkserv.c.
+
+	* ltconfig, ltmain.sh: Upgraded libtool from 1.3.5 to 1.4.2.
+
+2001-03-13  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.c: Implemented -r(chroot) and -f(family). Use
 	snprintf() instead of sprintf(). Now listen() only AF_INET or

@@ -1,3 +1,11 @@
+2002-01-31  Hiroshi Takekawa  <sian@fennel.org>
+
+	* src/multiskkserv.c: Merge the same yomi entries.
+
+	* lib/Makefile.am: Added hash table.
+
+	* lib/hash.c, lib/hash.h: New files.
+
 2002-01-30  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/Makefile.am: Added header files to be included...

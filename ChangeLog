@@ -1,5 +1,10 @@
 2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
 
+	* .cvsignore, lib/.cvsignore, src/.cvsignore, tools/.cvsignore:
+	Added .cvsignore.
+
+2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+
 	* src/multiskkserv.c: Fixed protocol errors. Implemented
 	connection statistics measurement. Implemented the connection
 	number control. Added -b option. Create threads detached when

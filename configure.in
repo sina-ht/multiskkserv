@@ -3,7 +3,7 @@ dnl
 dnl (C)Copyright 2001, 2002 by Hiroshi Takekawa
 dnl This file is part of multiskkserv.
 dnl
-dnl Last Modified: Fri Feb  1 02:44:50 2002.
+dnl Last Modified: Fri Feb  1 13:19:22 2002.
 dnl $Id$
 dnl
 dnl This software is free software; you can redistribute it and/or modify it
@@ -21,19 +21,21 @@ dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 dnl AC_INIT
 dnl AC_CONFIG_SRCDIR([src/multiskkserv.c])
-AC_INIT(src/multiskkserv.c)
-
+AC_INIT(multiskkserv, 20020201, sian@big.or.jp)
+AC_CONFIG_SRCDIR([compat.h])
 AM_INIT_AUTOMAKE(multiskkserv, 20020201)
-AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER([config.h])
 AC_PROG_LIBTOOL
 
 # Checks for programs.
-AC_PROG_AWK
-AC_PROG_CC
 dnl AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_MAKE_SET
 dnl AC_PROG_RANLIB
+AC_PROG_AWK
 
 # Checks for libraries.
 available_pthread=no
@@ -59,6 +61,8 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gethostbyname gethostname inet_ntoa memset socket strcasecmp strchr strdup])
 

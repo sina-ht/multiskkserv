@@ -3,7 +3,7 @@ dnl
 dnl (C)Copyright 2001 by Hiroshi Takekawa
 dnl This file is part of multiskkserv.
 dnl
-dnl Last Modified: Tue Feb 13 11:11:11 2001.
+dnl Last Modified: Tue Mar 13 13:06:33 2001.
 dnl $Id$
 dnl
 dnl This software is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@ dnl AC_INIT
 dnl AC_CONFIG_SRCDIR([src/multiskkserv.c])
 AC_INIT(src/multiskkserv.c)
 
-AM_INIT_AUTOMAKE(multiskkserv, 20010213)
+AM_INIT_AUTOMAKE(multiskkserv, 20010313)
 AM_CONFIG_HEADER(config.h)
 AM_PROG_LIBTOOL
 

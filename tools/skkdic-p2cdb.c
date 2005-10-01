@@ -3,7 +3,7 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Mon Feb 12 01:13:42 2001.
+ * Last Modified: Sun Feb 24 01:33:08 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 #include <cdb_make.h>
 #include <cdb.h>
 
+#define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"

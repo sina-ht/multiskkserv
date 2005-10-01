@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl (C)Copyright 2001, 2002 by Hiroshi Takekawa
+dnl (C)Copyright 2001-2005 by Hiroshi Takekawa
 dnl This file is part of multiskkserv.
 dnl
-dnl Last Modified: Fri Feb  1 13:19:22 2002.
+dnl Last Modified: Wed Sep 28 23:21:35 2005.
 dnl $Id$
 dnl
 dnl This software is free software; you can redistribute it and/or modify it
@@ -21,10 +21,10 @@ dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
 
 dnl AC_INIT
 dnl AC_CONFIG_SRCDIR([src/multiskkserv.c])
-AC_INIT(multiskkserv, 20020201, sian@big.or.jp)
-AC_CONFIG_SRCDIR([compat.h])
-AM_INIT_AUTOMAKE(multiskkserv, 20020201)
-AM_CONFIG_HEADER([config.h])
+AC_INIT([multiskkserv], [20050928], [sian@big.or.jp])
+AC_CONFIG_SRCDIR([src/multiskkserv.c])
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE
 AC_PROG_LIBTOOL
 
 # Checks for programs.
@@ -62,6 +62,7 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
+AC_FUNC_REALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gethostbyname gethostname inet_ntoa memset socket strcasecmp strchr strdup])
@@ -80,6 +81,14 @@ AC_ARG_ENABLE(debug,
         [  --enable-debug          build a debugging version.],
         [ enable_debug=$enableval ],
         [ enable_debug=no ])
+test "$enable_debug" = yes && AC_DEFINE(DEBUG, 1, [Define if you want to debug.]
+)
+
+dnl warning option
+AC_ARG_ENABLE(warnings,
+        [  --enable-warnings       enable more warnings.],
+        [ enable_warnings=$enableval ],
+        [ enable_warnings=no ])
 test "$enable_debug" = yes && AC_DEFINE(DEBUG, 1, [Define if you want to debug.]
 )
 
@@ -161,8 +170,10 @@ fi
 AC_SUBST(CDB_INCLUDES)
 AC_SUBST(LIBADD_CDB)
 
-dnl CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
-CFLAGS="$CFLAGS -Wstrict-prototypes -Wwrite-strings"
+if test "$CC" = "gcc"; then
+  CFLAGS="$CFLAGS -pipe -Wall"
+  test "$enable_warnings" = "yes" && CFLAGS="$CFLAGS -Werror -Wstrict-prototypes -Wwrite-strings"
+fi
 
 AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile tools/Makefile])
 AC_OUTPUT

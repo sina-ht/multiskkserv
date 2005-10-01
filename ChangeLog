@@ -1,5 +1,13 @@
 2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
 
+	* src/multiskkserv.c: Use hash_define_value() instead of
+	hash_define(), which caused hash_destroy() to free() unallocated
+	value.
+
+	* src/multiskkserv-ctl.c: Use err_message_fnc().
+
+2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
+
 	* configure.in: Added --enable-warnings option.  Upgraded.
 
 	* common.h, lib/dlist.c, lib/dlist.h, lib/hash.c, lib/hash.h,

@@ -1,3 +1,17 @@
+2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
+
+	* configure.in: Added --enable-warnings option.  Upgraded.
+
+	* common.h, lib/dlist.c, lib/dlist.h, lib/hash.c, lib/hash.h,
+	src/multiskkserv-ctl.c, src/multiskkserv.c: New dlist and hash
+	implementation.
+
+	* tools/skkdic-p2cdb.c: Needs unistd.h.
+
+	* config.guess, config.sub, ltmain.sh: Updated.
+
+	* autogen.sh: More sophisticated autogen.sh.
+
 2002-02-01  Hiroshi Takekawa  <sian@fennel.org>
 
 	* src/multiskkserv-ctl.c: Fixed segmentation fault without -s.

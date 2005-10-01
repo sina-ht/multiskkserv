@@ -3,7 +3,7 @@
  * (C)Copyright 2001-2005 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Wed Sep 28 23:32:49 2005.
+ * Last Modified: Sat Oct  1 12:37:20 2005.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -102,7 +102,7 @@ static void
 usage(void)
 {
   printf(PROGNAME " version " VERSION "\n");
-  printf("(C)Copyright 2001, 2002 by Hiroshi Takekawa\n\n");
+  printf("(C)Copyright 2001-2005 by Hiroshi Takekawa\n\n");
   printf("usage: multiskkserv [options] [path...]\n");
 
   printf("Options:\n");
@@ -153,7 +153,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
 	continue;
       }
 #ifdef HAVE_GETADDRINFO
-      fprintf(stderr, PROGNAME ": getaddrinfo: %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
+      err_message_fnc("getaddrinfo(): %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
 #endif
       return -2;
     }
@@ -166,7 +166,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
 #ifdef HAVE_GETNAMEINFO
       if ((gaierr = getnameinfo(res->ai_addr, res->ai_addrlen, ipbuf, sizeof(ipbuf),
 				NULL, 0, NI_NUMERICHOST))) {
-	fprintf(stderr, "getnameinfo(): %s\n", gai_strerror(gaierr));
+	err_message_fnc("getnameinfo(): %s\n", gai_strerror(gaierr));
 	if (res0)
 	  freeaddrinfo(res0);
 	close(gs);
@@ -215,7 +215,7 @@ open_dictionary(char *path)
   Dictionary *dic;
 
   if ((dic = calloc(1, sizeof(Dictionary))) == NULL) {
-    fprintf(stderr, "No enough memory.\n");
+    err_message_fnc("No enough memory.\n");
     return NULL;
   }
 
@@ -267,7 +267,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
     pthread_mutex_lock(&dic->mutex);
     cdb_findstart(&dic->cdb);
     if ((r = cdb_findnext(&dic->cdb, word, len)) == -1) {
-      fprintf(stderr, "cdb_findnext() failed.\n");
+      err_message_fnc("cdb_findnext() failed.\n");
       if (!ncandidates) {
 	rbuf[0] = SKKSERV_S_ERROR;
 	write(out, rbuf, strlen(rbuf));
@@ -279,14 +279,14 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
     if (r) {
       debug_message("%s: %s found(%d)\n", __FUNCTION__, word, ncandidates);
       if (rlen + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
-	fprintf(stderr, "Truncated: %s\n", word);
+	err_message_fnc("Truncated: %s\n", word);
 	r = SKKSERV_RESULT_SIZE - rlen - 2;
       } else {
 	r = cdb_datalen(&dic->cdb);
       }
       if (cdb_read(&dic->cdb, tmpresult, r, cdb_datapos(&dic->cdb)) == -1) {
 	if (!ncandidates) {
-	  fprintf(stderr, "cdb_read() failed.\n");
+	  err_message_fnc("cdb_read() failed.\n");
 	  rbuf[0] = SKKSERV_S_ERROR;
 	  write(out, rbuf, strlen(rbuf));
 	  pthread_mutex_unlock(&dic->mutex);
@@ -304,7 +304,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
       while (i < r) {
 	if (tmpresult[i] == '/') {
 	  if (i - p - 1 > 0 &&
-	      hash_define(word_hash, tmpresult + p + 1, i - p - 1, (void *)1) == 1) {
+	      hash_define_value(word_hash, tmpresult + p + 1, i - p - 1, (void *)1) == 1) {
 	    memcpy(result + rlen, tmpresult + p, i - p);
 	    rlen += i - p;
 	    ncandidates++;
@@ -462,14 +462,14 @@ main(int argc, char **argv)
     case 'p':
       port = atoi(optarg);
       if (port < 0 || port > 65535) {
-	fprintf(stderr, "Invalid port number(%d).\n", port);
+	err_message_fnc("Invalid port number(%d).\n", port);
 	return INVALID_PORT_ERROR;
       }
       break;
     case 'b':
       nbacklogs = atoi(optarg);
       if (nbacklogs < 1 || nbacklogs > 64) {
-	fprintf(stderr, "Invalid number for the number of backlogs(%d).\n", nbacklogs);
+	err_message_fnc("Invalid number for the number of backlogs(%d).\n", nbacklogs);
 	return INVALID_NUMBER_ERROR;
       }
       break;
@@ -492,7 +492,7 @@ main(int argc, char **argv)
       else if (strcasecmp("IPv6", optarg) == 0)
 	family = AF_INET6;
       else {
-	fprintf(stderr, "Invalid family(%s).\n", optarg);
+	err_message_fnc("Invalid family(%s).\n", optarg);
 	return INVALID_FAMILY_ERROR;
       }
       break;
@@ -512,7 +512,7 @@ main(int argc, char **argv)
   if (daemon) {
     if ((gs = prepare_listen(servername, &serverstring, port, (char *)SKKSERV_SERVICE,
 			     nbacklogs, family)) < 0) {
-      fprintf(stderr, "Cannot bind\n");
+      err_message_fnc("Cannot bind\n");
       return BIND_ERROR;
     }
   }
@@ -531,12 +531,12 @@ main(int argc, char **argv)
   dic_list = dlist_create();
   for (i = optind; i < argc; i++) {
     if ((dic = open_dictionary(argv[i])) == NULL)
-      fprintf(stderr, "Cannot open dictionary %s\n", argv[i]);
+      err_message_fnc("Cannot open dictionary %s\n", argv[i]);
     else
       dlist_add(dic_list, dic);
   }
   if (!dlist_size(dic_list)) {
-    fprintf(stderr, "No dictionary.\n");
+    err_message_fnc("No dictionary.\n");
     return NO_DICTIONARY_ERROR;
   }
 
@@ -562,7 +562,7 @@ main(int argc, char **argv)
       }
 
       if ((skkconn = calloc(1, sizeof(SkkConnection))) == NULL) {
-	fprintf(stderr, "No enough memory.\n");
+	err_message_fnc("No enough memory.\n");
 	return MEMORY_ERROR;
       }
 
@@ -575,7 +575,7 @@ main(int argc, char **argv)
 #ifdef HAVE_GETNAMEINFO
       if ((gaierr = getnameinfo(&sp, splen, ipbuf, sizeof(ipbuf),
 				NULL, 0, NI_NUMERICHOST))) {
-	fprintf(stderr, "getnameinfo(): %s\n", gai_strerror(gaierr));
+	err_message_fnc("getnameinfo(): %s\n", gai_strerror(gaierr));
 	skkconn->peername = strdup("UNKNOWN");
       } else {
 	ipbuf[sizeof(ipbuf) - 1] = '\0';
@@ -600,7 +600,7 @@ main(int argc, char **argv)
     pthread_t thread;
 
     if ((skkconn = calloc(1, sizeof(SkkConnection))) == NULL) {
-      fprintf(stderr, "No enough memory.\n");
+      err_message_fnc("No enough memory.\n");
       return MEMORY_ERROR;
     }
 

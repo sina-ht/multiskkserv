@@ -3,7 +3,7 @@
  * (C)Copyright 2001, 2002 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Feb  1 13:26:51 2002.
+ * Last Modified: Sun Feb 24 01:32:27 2002.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -71,10 +71,9 @@ socket_connect(char *remote, char **sstr, int port, char *service, int family)
 {
   String *s;
   struct addrinfo hints, *res0, *res;
-  int sock;
+  int sock = 0;
   int opt, gaierr;
   int try_default_portnum;
-  char *servername;
   char sbuf[NI_MAXSERV];
   char ipbuf[INET6_ADDRSTRLEN];
   char selfname[MAXHOSTNAMELEN + 1];
@@ -168,7 +167,7 @@ show_stat(char *remote, int port, int family)
   char rbuf[SKKSERV_REQUEST_SIZE];
 
   if ((sock = socket_connect(remote, &sstr, port, (char *)SKKSERV_SERVICE, family)) < 0) {
-    fprintf(stderr, __FUNCTION__ ": cannot make a connection.\n");
+    fprintf(stderr, "%s: cannot make a connection.\n", __FUNCTION__);
     return;
   }
 
@@ -203,9 +202,7 @@ main(int argc, char **argv)
   extern int optind;
   char *optstr;
   char *servername = NULL;
-  char *serverstring;
-  char *chrootdir = NULL;
-  int i, ch;
+  int ch;
   int port = -1;
   int family = AF_INET;
 

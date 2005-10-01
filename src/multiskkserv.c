@@ -1,9 +1,9 @@
 /*
  * multiskkserv.c -- simple skk multi-dictionary server
- * (C)Copyright 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2001-2005 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Feb  1 10:41:31 2002.
+ * Last Modified: Wed Sep 28 23:32:49 2005.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -114,7 +114,7 @@ prepare_listen(char *sname, char **sstr, int port, char *service, int nbacklogs,
 {
   String *s;
   struct addrinfo hints, *res0, *res;
-  int gs;
+  int gs = 0;
   int opt, gaierr;
   int try_default_portnum;
   char *servername;
@@ -233,7 +233,8 @@ open_dictionary(char *path)
   return dic;
 }
 
-#define HASH_SIZE 4096
+/* Must be prime */
+#define HASH_SIZE 4099
 static void
 search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 {
@@ -272,7 +273,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	write(out, rbuf, strlen(rbuf));
       }
       pthread_mutex_unlock(&dic->mutex);
-      hash_destroy(word_hash, 0);
+      hash_destroy(word_hash);
       return;
     }
     if (r) {
@@ -289,7 +290,7 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	  rbuf[0] = SKKSERV_S_ERROR;
 	  write(out, rbuf, strlen(rbuf));
 	  pthread_mutex_unlock(&dic->mutex);
-	  hash_destroy(word_hash, 0);
+	  hash_destroy(word_hash);
 	  return;
 	} else {
 	  result[rlen] = '\0';
@@ -312,22 +313,11 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
 	}
 	i++;
       }
-#if 0
-      /* Simple concatenation */
-      if (result[rlen + r - 1] == '/') {
-	result[rlen + r - 1] = '\0';
-	rlen += r - 1;
-      } else {
-	result[rlen + r] = '\0';
-	rlen += r;
-      }
-      ncandidates++;
-#endif
     }
     pthread_mutex_unlock(&dic->mutex);
   }
 
-  hash_destroy(word_hash, 0);
+  hash_destroy(word_hash);
 
   if (ncandidates) {
     result[rlen] = '/';
@@ -405,7 +395,7 @@ skkserver(void *arg)
 
   free(conn);
 
-  pthread_exit((void *)0);
+  return (void *)0;
 }
 
 static pthread_t
@@ -458,7 +448,7 @@ main(int argc, char **argv)
   int daemon = 1;
   int nbacklogs = SKKSERV_BACKLOG;
   int family = AF_INET;
-  int gs;
+  int gs = 0;
 
   optstr = gen_optstring(options);
   while ((ch = getopt(argc, argv, optstr)) != -1) {

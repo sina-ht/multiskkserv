@@ -3,7 +3,7 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of Enfle.
  *
- * Last Modified: Fri Feb  2 13:57:13 2001.
+ * Last Modified: Wed Sep 28 23:01:53 2005.
  * $Id$
  *
  * Enfle is free software; you can redistribute it and/or modify it
@@ -35,47 +35,42 @@
 
 #include <stdio.h>
 #define show_message(format, args...) printf(format, ## args)
-#define warning(format, args...) printf("warning" format, ## args)
+#define show_message_fn(format, args...) printf("%s" format, __FUNCTION__ , ## args)
+#define show_message_fnc(format, args...) printf("%s: " format, __FUNCTION__ , ## args)
+#define warning(format, args...) printf("Warning: " format, ## args)
+#define warning_fn(format, args...) printf("Warning: %s" format, __FUNCTION__ , ## args)
+#define warning_fnc(format, args...) printf("Warning: %s: " format, __FUNCTION__ , ## args)
+#define err_message(format, args...) fprintf(stderr, "Error: " format, ## args)
+#define err_message_fn(format, args...) fprintf(stderr, "Error: %s" format, __FUNCTION__ , ## args)
+#define err_message_fnc(format, args...) fprintf(stderr, "Error: %s: " format, __FUNCTION__ , ## args)
 
-#ifdef REQUIRE_FATAL
-#include <stdarg.h>
-static void fatal(int, const char *, ...) __attribute__ ((noreturn));
-static void
-fatal(int code, const char *format, ...)
-{
-  va_list args;
-
-  va_start(args, format);
-  fprintf(stderr, "*** " PACKAGE " FATAL: ");
-  vfprintf(stderr, format, args);
-  va_end(args);
-
-  exit(code);
-}
+#if !defined(unlikely)
+#if __GNUC__ == 2 && __GNUC_MINOR__ < 96
+#define likely(x)   (x)
+#define unlikely(x) (x)
+#else
+#define likely(x)   __builtin_expect((x), 1)
+#define unlikely(x) __builtin_expect((x), 0)
+#endif
 #endif
 
-#ifdef REQUIRE_FATAL_PERROR
-static inline void fatal_perror(int, const char *) __attribute__ ((noreturn));
-static inline void
-fatal_perror(int code, const char *msg)
-{
-  perror(msg);
-  exit(code);
-}
-#endif
+#define __fatal(msg, format, args...) \
+  do {fprintf(stderr, "%s" format, msg, ## args); raise(SIGABRT); exit(1);} while (0)
+#define fatal(format, args...) __fatal(PACKAGE " FATAL ERROR: ", format, ## args)
+#define fatal_perror(msg) do { perror(msg); raise(SIGABRT); exit(1); } while (0)
+#define bug(format, args...) __fatal(PACKAGE " BUG: ", format, ## args) 
+#define bug_on(cond) do { if (unlikely(cond)) __fatal(PACKAGE " BUG: cond: ", "%s", #cond); } while (0)
 
 #ifdef DEBUG
 #  define PROGNAME PACKAGE "-debug"
 #  define debug_message(format, args...) fprintf(stderr, format, ## args)
-#  define IDENTIFY_BEFORE_OPEN
-#  define IDENTIFY_BEFORE_LOAD
-#  define IDENTIFY_BEFORE_PLAY
+#  define debug_message_fn(format, args...) fprintf(stderr, "%s" format, __FUNCTION__ , ## args)
+#  define debug_message_fnc(format, args...) fprintf(stderr, "%s: " format, __FUNCTION__ , ## args)
 #else
 #  define PROGNAME PACKAGE
 #  define debug_message(format, args...)
-/* #  define IDENTIFY_BEFORE_OPEN */
-/* #  define IDENTIFY_BEFORE_LOAD */
-/* #  define IDENTIFY_BEFORE_PLAY */
+#  define debug_message_fn(format, args...)
+#  define debug_message_fnc(format, args...)
 #endif
 
 #ifdef WITH_DMALLOC

@@ -1,9 +1,9 @@
 /*
  * hash.c -- Hash Table Library
- * (C)Copyright 1999, 2000, 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 1999-2005 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Feb  1 01:45:40 2002.
+ * Last Modified: Sat Oct  1 10:48:42 2005.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -25,37 +25,18 @@
 
 #define REQUIRE_STRING_H
 #include "compat.h"
-
 #include "common.h"
 
 #include "hash.h"
 
-static int define(Hash *, void *, unsigned int, void *);
-static int set(Hash *, void *, unsigned int, void *);
-static void set_function(Hash *, unsigned int (*)(void *, unsigned int));
-static void set_function2(Hash *, unsigned int (*)(void *, unsigned int));
-static Dlist *get_keys(Hash *);
-static int get_key_size(Hash *);
-static void *lookup(Hash *, void *, unsigned int);
-static int delete_key(Hash *, void *, unsigned int, int);
-static void destroy(Hash *, int);
+#define HASH_DELETED_KEY ((Dlist_data *)-1)
 
 static unsigned int default_hash_function(void *, unsigned int);
 static unsigned int default_hash_function2(void *, unsigned int);
 
 static Hash hash_template = {
-  hash_function: default_hash_function,
-  hash_function2: default_hash_function2,
-
-  define: define,
-  set: set,
-  set_function: set_function,
-  set_function2: set_function2,
-  get_keys: get_keys,
-  get_key_size: get_key_size,
-  lookup: lookup,
-  delete_key: delete_key,
-  destroy: destroy
+  .hash_function = default_hash_function,
+  .hash_function2 = default_hash_function2,
 };
 
 static unsigned int
@@ -71,8 +52,6 @@ default_hash_function(void *key, unsigned int len)
     h += c + (c << 17);
     h ^= (h >> 2);
   }
-  h += l + (l << 17);
-  h ^= (h >> 2);
 
   return h;
 }
@@ -90,8 +69,6 @@ default_hash_function2(void *key, unsigned int len)
     h += c + (c << 13);
     h ^= (h >> 3);
   }
-  h += l + (l << 13);
-  h ^= (h >> 3);
 
   return 17 - (h % 17);
 }
@@ -103,21 +80,28 @@ hash_create(int size)
   Hash *h;
   Hash_data *d;
 
-  if ((h = (Hash *)calloc(1, sizeof(Hash))) == NULL)
+  h = (Hash *)calloc(1, sizeof(Hash));
+  if (unlikely(h == NULL))
     return NULL;
-
   memcpy(h, &hash_template, sizeof(Hash));
 
-  if ((h->data = (Hash_data **)calloc(size, sizeof(Hash_data *))) == NULL)
+  /* 16411, 8209, 4099, 1031, 257 */
+  if (size == 16384 || size == 8192 || size == 4096 || size == 1024 || size == 256)
+    warning_fnc("hash_size[%d] must be prime!\n", size);
+
+  h->data = (Hash_data **)calloc(size, sizeof(Hash_data *));
+  if (unlikely(h->data == NULL))
     goto error_h;
 
-  if ((d = (Hash_data *)calloc(size, sizeof(Hash_data))) == NULL)
+  d = (Hash_data *)calloc(size, sizeof(Hash_data));
+  if (unlikely(d == NULL))
     goto error_data;
 
   for (i = 0; i < size; i++)
     h->data[i] = d++;
 
-  if ((h->keys = dlist_create()) == NULL)
+  h->keys = dlist_create();
+  if (unlikely(h->keys == NULL))
     goto error_d;
 
   h->size = size;
@@ -130,36 +114,66 @@ hash_create(int size)
   return NULL;
 }
 
+static Hash_data *
+lookup_key(Hash *h, void *k, unsigned int len)
+{
+  int count = 0;
+  unsigned int hash, first_hash, skip;
+  Hash_data *d;
+  Hash_key *hk;
+  Dlist_data *dd;
+
+  hash = h->hash_function(k, len) % h->size;
+  first_hash = hash;
+  skip = h->hash_function2(k, len);
+  for (;;) {
+    d = h->data[hash];
+    dd = d->key;
+
+    if (dd == NULL)
+      return NULL;
+
+    if (dd != HASH_DELETED_KEY) {
+      hk = dlist_data(dd);
+      if (hk->len == len && memcmp(hk->key, k, len) == 0)
+	break;
+    }
+
+    hash = (hash + skip) % h->size;
+    if (hash == first_hash) {
+      debug_message_fnc("*** hash wrapped around. ***\n");
+      return NULL;
+    }
+
+    count++;
+    bug_on(count > 1030);
+  }
+
+  return d;
+}
+
 static unsigned int
-lookup_internal(Hash *h, void *k, unsigned int len, int flag)
+lookup_key_or_vacancy(Hash *h, void *k, unsigned int len)
 {
   int count = 0;
   unsigned int hash, skip;
-  unsigned char *kc;
   Hash_key *hk;
+  Dlist_data *dd;
 
-  kc = k;
   hash = h->hash_function(k, len) % h->size;
   skip = h->hash_function2(k, len);
+  for (;;) {
+    dd = h->data[hash]->key;
+    if (dd == HASH_DELETED_KEY || dd == NULL)
+      break;
+    hk = dlist_data(dd);
+    if (hk->len == len && memcmp(hk->key, k, len) == 0)
+      break;
+    hash = (hash + skip) % h->size;
 
-  do {
-    if (h->data[hash]->key == (Dlist_data *)-1) {
-      if (flag == HASH_LOOKUP_ACCEPT_DELETED)
-	break;
-      hash = (hash + skip) % h->size;
-    } else if (!h->data[hash]->key) {
-      /* found empty */
-      break;
-    } else if ((hk = dlist_data(h->data[hash]->key)) &&
-	       hk->len == len && (memcmp(hk->key, k, len) == 0)) {
-      break;
-    } else {
-      hash = (hash + skip) % h->size;
-    }
     count++;
-    if (count > 100000)
-      raise(SIGABRT);
-  } while (1);
+    bug_on(count > 1000);
+  }
 
   return hash;
 }
@@ -169,147 +183,193 @@ hash_key_create(void *k, unsigned int len)
 {
   Hash_key *hk;
 
-  if ((hk = malloc(sizeof(Hash_key))) == NULL)
+  hk = malloc(sizeof(Hash_key));
+  if (unlikely(hk == NULL))
     return NULL;
-  if ((hk->key = malloc(len)) == NULL) {
+
+  hk->key = malloc(len);
+  if (unlikely(hk->key == NULL)) {
     free(hk);
     return NULL;
   }
+
   memcpy(hk->key, k, len);
   hk->len = len;
 
   return hk;
 }
 
+static void
+hash_key_destroy(void *arg)
+{
+  Hash_key *hk = arg;
+
+  if (hk) {
+    if (hk->key)
+      free(hk->key);
+    free(hk);
+  }
+}
+
 /* methods */
 
-static void
-set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
+void
+hash_set_function(Hash *h, unsigned int (*function)(void *, unsigned int))
 {
   h->hash_function = function;
 }
 
-static void
-set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
+void
+hash_set_function2(Hash *h, unsigned int (*function2)(void *, unsigned int))
 {
   h->hash_function2 = function2;
 }
 
-static int
-define(Hash *h, void *k, unsigned int len, void *d)
+int
+hash_define_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructor dest)
 {
-  unsigned int i;
+  unsigned int i = lookup_key_or_vacancy(h, k, len);
   Hash_key *hk;
 
-  i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[i]->key != NULL && h->data[i]->key != (Dlist_data *)-1)
+  if (h->data[i]->key != NULL && h->data[i]->key != HASH_DELETED_KEY)
     return -1; /* already registered */
 
-  if ((hk = hash_key_create(k, len)) == NULL)
+  hk = hash_key_create(k, len);
+  if (unlikely(hk == NULL))
     return 0;
-  if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
-    free(hk);
+
+  h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy);
+  if (unlikely(h->data[i]->key == NULL)) {
+    hash_key_destroy(hk);
     return 0;
   }
 
   h->data[i]->datum = d;
+  h->data[i]->data_destructor = dest;
 
   return 1;
 }
 
-static int
-set(Hash *h, void *k, unsigned int len, void *d)
+int
+hash_define(Hash *h, void *k, unsigned int len, void *d)
 {
-  unsigned int i;
-  Hash_key *hk;
-
-  i = lookup_internal(h, k, len, HASH_LOOKUP_ACCEPT_DELETED);
-  if (h->data[i]->key == NULL || h->data[i]->key == (Dlist_data *)-1) {
-    if ((hk = hash_key_create(k, len)) == NULL)
-      return 0;
-    if ((h->data[i]->key = h->keys->add(h->keys, hk)) == NULL) {
-      free(hk);
-      return 0;
-    }
-  }
-
-  h->data[i]->datum = d;
-
-  return 1;
+  return hash_define_object(h, k, len, d, free);
 }
 
-static Dlist *
-get_keys(Hash *h)
+int
+hash_define_value(Hash *h, void *k, unsigned int len, void *d)
 {
-  return h->keys;
-}
-
-static int
-get_key_size(Hash *h)
-{
-  Dlist *keys;
-
-  keys = get_keys(h);
-  return dlist_size(keys);
-}
-
-static void *
-lookup(Hash *h, void *k, unsigned int len)
-{
-  unsigned int i;
-
-  i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
-
-  return (h->data[i]->key == NULL) ? NULL : h->data[i]->datum;
-}
-
-static int
-destroy_datum(Hash *h, int i, int f)
-{
-  Hash_data *d = h->data[i];
-
-  if (d->key == (Dlist_data *)-1)
-    return 0;
-  if (d->key != NULL) {
-    if (!dlist_delete(h->keys, d->key))
-      return 0;
-    d->key = (Dlist_data *)-1;
-  }
-  if (f && d->datum != NULL)
-    free(d->datum);
-
-  return 1;
-}
-
-static int
-delete_key(Hash *h, void *k, unsigned int len, int f)
-{
-  int i = lookup_internal(h, k, len, HASH_LOOKUP_SEARCH_MATCH);
-
-  if (h->data[i]->key == NULL)
-    return 0;
-
-  if (!destroy_datum(h, i, f))
-    return 0;
-
-  return 1;
+  return hash_define_object(h, k, len, d, NULL);
 }
 
 static void
-destroy(Hash *h, int f)
+destroy_hash_data(Hash_data *d)
 {
-  Dlist_data *t;
-  Dlist *keys;
+  if (d->datum && d->data_destructor)
+    d->data_destructor(d->datum);
+}
+
+int
+hash_set_object(Hash *h, void *k, unsigned int len, void *d, Hash_data_destructor dest)
+{
+  unsigned int i = lookup_key_or_vacancy(h, k, len);
   Hash_key *hk;
 
-  keys = get_keys(h);
-  while (get_key_size(h) > 0) {
-    t = dlist_top(keys);
-    hk = dlist_data(t);
-    delete_key(h, hk->key, hk->len, f);
+  if (h->data[i]->key == NULL || h->data[i]->key == HASH_DELETED_KEY) {
+    hk = hash_key_create(k, len);
+    if (unlikely(hk == NULL))
+      return 0;
+    h->data[i]->key = dlist_add_object(h->keys, hk, hash_key_destroy);
+    if (unlikely(h->data[i]->key == NULL)) {
+      hash_key_destroy(hk);
+      return 0;
+    }
+  } else {
+    /* Should destroy overwritten data */
+    destroy_hash_data(h->data[i]);
   }
 
-  dlist_destroy(keys, 1);
+  h->data[i]->datum = d;
+  h->data[i]->data_destructor = dest;
+
+  return 1;
+}
+
+int
+hash_set(Hash *h, void *k, unsigned int len, void *d)
+{
+  return hash_set_object(h, k, len, d, free);
+}
+
+int
+hash_set_value(Hash *h, void *k, unsigned int len, void *d)
+{
+  return hash_set_object(h, k, len, d, NULL);
+}
+
+int
+hash_get_key_size(Hash *h)
+{
+  Dlist *keys = hash_get_keys(h);
+  return dlist_size(keys);
+}
+
+void *
+hash_lookup(Hash *h, void *k, unsigned int len)
+{
+  Hash_data *d = lookup_key(h, k, len);
+
+  if (d == NULL)
+    return NULL;
+  return d->datum;
+}
+
+static int
+delete_key(Hash *h, Hash_data *d)
+{
+  if (d->key == HASH_DELETED_KEY)
+    return 0;
+  if (d->key != NULL) {
+    if (unlikely(!dlist_delete(h->keys, d->key)))
+      return 0;
+    d->key = HASH_DELETED_KEY;
+  }
+  destroy_hash_data(d);
+
+  return 1;
+}
+
+int
+hash_delete(Hash *h, void *k, unsigned int len)
+{
+  Hash_data *d = lookup_key(h, k, len);
+
+  if (d == NULL)
+    return 0;
+
+  if (unlikely(!delete_key(h, d)))
+    return 0;
+
+  return 1;
+}
+
+void
+hash_destroy(Hash *h)
+{
+  Dlist_data *t;
+  Dlist *keys = hash_get_keys(h);
+  Hash_key *hk;
+
+  while (hash_get_key_size(h) > 0) {
+    t = dlist_top(keys);
+    hk = dlist_data(t);
+    if (unlikely(!hash_delete(h, hk->key, hk->len))) {
+      err_message_fnc("size = %d\n", hash_get_key_size(h));
+      break;
+    }
+  }
+
+  dlist_destroy(keys);
   free(h->data[0]);
   free(h->data);
   free(h);

@@ -1,9 +1,9 @@
 /*
  * multiskkserv-ctl.c -- multiskkserv control utility
- * (C)Copyright 2001, 2002 by Hiroshi Takekawa
+ * (C)Copyright 2001-2005 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Sun Feb 24 01:32:27 2002.
+ * Last Modified: Sat Oct  1 12:38:44 2005.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -109,7 +109,7 @@ socket_connect(char *remote, char **sstr, int port, char *service, int family)
 	continue;
       }
 #ifdef HAVE_GETADDRINFO
-      fprintf(stderr, PROGNAME "-ctl: getaddrinfo: %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
+      err_message_fnc("getaddrinfo(): %s(gaierr = %d)\n", gai_strerror(gaierr), gaierr);
 #endif
       return -2;
     }
@@ -122,7 +122,7 @@ socket_connect(char *remote, char **sstr, int port, char *service, int family)
 #ifdef HAVE_GETNAMEINFO
       if ((gaierr = getnameinfo(res->ai_addr, res->ai_addrlen, ipbuf, sizeof(ipbuf),
 				NULL, 0, NI_NUMERICHOST))) {
-	fprintf(stderr, PROGNAME "-ctl: getnameinfo: %s\n", gai_strerror(gaierr));
+	err_message_fnc("getnameinfo(): %s\n", gai_strerror(gaierr));
 	if (res0)
 	  freeaddrinfo(res0);
 	close(sock);
@@ -167,7 +167,7 @@ show_stat(char *remote, int port, int family)
   char rbuf[SKKSERV_REQUEST_SIZE];
 
   if ((sock = socket_connect(remote, &sstr, port, (char *)SKKSERV_SERVICE, family)) < 0) {
-    fprintf(stderr, "%s: cannot make a connection.\n", __FUNCTION__);
+    err_message_fnc("Cannot make a connection.\n");
     return;
   }
 
@@ -188,7 +188,7 @@ static void
 usage(void)
 {
   printf(PROGNAME "-ctl version " VERSION "\n");
-  printf("(C)Copyright 2001, 2002 by Hiroshi Takekawa\n\n");
+  printf("(C)Copyright 2001-2005 by Hiroshi Takekawa\n\n");
   printf("usage: multiskkserv-ctl [options] ['stat']\n");
 
   printf("Options:\n");
@@ -218,7 +218,7 @@ main(int argc, char **argv)
     case 'p':
       port = atoi(optarg);
       if (port < 0 || port > 65535) {
-	fprintf(stderr, "Invalid port number(%d).\n", port);
+	err_message_fnc("Invalid port number(%d).\n", port);
 	return INVALID_PORT_ERROR;
       }
       break;
@@ -238,7 +238,7 @@ main(int argc, char **argv)
       else if (strcasecmp("IPv6", optarg) == 0)
 	family = AF_INET6;
       else {
-	fprintf(stderr, "Invalid family(%s).\n", optarg);
+	err_message_fnc("Invalid family(%s).\n", optarg);
 	return INVALID_FAMILY_ERROR;
       }
       break;

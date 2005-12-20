@@ -1,6 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
-(C) Copyright 2001, 2002 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Fri Feb  1 02:48:09 2002.
+(C) Copyright 2001-2005 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Wed Dec 21 00:22:47 2005.
 $Id$
 
 multiskkserv は複数の辞書を扱える辞書サーバです。 multiskkserv は辞書
@@ -8,17 +8,15 @@ multiskkserv は複数の辞書を扱える辞書サーバです。 multiskkserv は辞書
 採用しています。この cdb は、システムにインストールされた固定辞書を保
 持するのに向いていると思われます。
 
-このソフトウェアは試験的なものです。バグレポートやコメントなどをお願い
-します。少なくとも、この README は multiskkserv を辞書サーバとして使っ
-て書けています。
+このソフトウェアは 4 年使用していますが、バグや要望等ありましたら、メー
+ルでお知らせください。
 
 
 1. 必要な環境
 
 pthread:
- もし libc5 を使っていれば、 linuxthread をいれてください。
- http://pauillac.inria.fr/~xleroy/linuxthreads/
- あたりでみつかるでしょう。
+ 最近のシステムには libpthread が入っています。nptl でも linuxthreads
+ でも動作するはずです。
 
 cdb-0.75:
  cdb のパッケージをインストールはしなくてもいいので、コンパイルだけし
@@ -33,9 +31,9 @@ cdb-0.75:
 --with-cdb で cdb を展開しコンパイルしたディレクトリをフルパスで指定し
 てください。
 
-% tar xvzf multiskkserv-2002xxxx.tar.gz
+% tar xvzf multiskkserv-200xxxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build
-% ../multiskkserv-2002xxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
+% ../multiskkserv-200xxxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
 % su
 # make install
 # exit
@@ -49,11 +47,18 @@ multiskkserv, multiskkserv-ctl が sbin に、 skkdic-p2cdb が bin に入り
 
 3. 辞書の変換
 
-skkdic-p2cdb を使ってプレーンテキストの辞書を cdb 形式に変換します。や
-り方は簡単です。
+skkdic-p2cdb を使ってプレーンテキストの辞書を cdb 形式に変換します。こ
+れ以降、prefix は /usr/local を仮定します。やり方は簡単です。
 
 # cd /usr/local/share/skk
 # skkdic-p2cdb SKK-JISYO.L.cdb < SKK-JISYO.L
+
+さらに、追加のスクリプト tools/convert.sh を使って、一括変換することも
+できます。それを /usr/local/share/skk にコピーして実行します。
+
+# cp multiskkserv-200xxxxx/tools/convert.sh /usr/local/share/skk
+# cd /usr/local/share/skk
+# ./convert.sh
 
 
 4. サーバの起動
@@ -107,7 +112,12 @@ E-mail: Hiroshi Takekawa <sian@big.or.jp>
 
 8. 謝辞
 
-Eiji Obata <obata@suzuki.kuee.kyoto-u.ac.jp>さん:
+Eiji Obata さん:
 
  20020113 に必要なヘッダファイルが含まれていないことを指摘してくださいました。
  また、同じ読みのエントリがある時にマージされないことを指摘してくださいました。
+
+UTUMI Hirosi さん:
+
+ 最新の SKK-JISYO.L の変換しようとすると落ちることを最初に直接報告して
+ くださいました。Mandriva Cooker向けのパッケージも作ってらっしゃいます。

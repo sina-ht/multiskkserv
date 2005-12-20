@@ -1,32 +1,31 @@
 multiskkserv -- simple skk multi-dictionary server
-(C)Copyright 2001, 2002 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Fri Feb  1 02:46:22 2002.
+(C)Copyright 2001-2005 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Wed Dec 21 00:22:22 2005.
 $Id$
 
 If you think my English is too bad to read, please correct.
 
-multiskkserv is a skk server which can search multiple dictionaries.
+multiskkserv is a skk server which can use multiple dictionaries.
 This server uses cdb format as the dictionary format.  cdb is the
 efficient and constant (i.e. cannot add, delete, modify) database
 format by Dan J. Bernstein, which I think is the appropriate format
 for the system-wide constant dictionary storage.
 
-This is very experimental.  Please send me any bug reports, comments,
-and so on.
+This software has been tested for at least 4 years.  But if you find
+any bugs, or have any suggestions, please send me an e-mail to report.
 
 
 1. Requirements
 
 pthread:
- If you use libc5, install linuxthreads.
- Probably, you can get it at
- http://pauillac.inria.fr/~xleroy/linuxthreads/
+ Modern systems have libpthread.  Whether nptl or linuxthreads will
+ probably work.
 
 cdb-0.75:
  At least, compile this package.  Installing is not required, though
  it may be useful.
  Grab http://cr.yp.to/cdb/cdb-0.75.tar.gz
- Unpack, change directory, run 'make it' to compile.
+ Unpack, change directory, and run 'make it' to compile.
  Optionally, do 'make setup check' to install.
 
 
@@ -35,9 +34,9 @@ cdb-0.75:
 Specify the full path of the directory where you unpacked cdb
 distribution by --with-cdb.
 
-% tar xvzf multiskkserv-2002xxxx.tar.gz
+% tar xvzf multiskkserv-200xxxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build
-% ../multiskkserv-2002xxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
+% ../multiskkserv-200xxxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
 % su
 # make install
 # exit
@@ -45,16 +44,25 @@ distribution by --with-cdb.
 % rm -rf multiskkserv.build
 
 'make install' installs three binaries: multiskkserv, multiskkserv-ctl
-in sbin, skkdic-p2cdb in bin.
+in sbin, and skkdic-p2cdb in bin.
 
 
 3. Convert dictionary
 
 skkdic-p2cdb converts plain text dictionary(such as SKK-JISYO.L) into
-cdb format. Usage is simple:
+cdb format.  From now on, prefix is assumed to be '/usr/local'.  Usage
+is simple:
 
 % cd /usr/local/share/skk
 % skkdic-p2cdb SKK-JISYO.L.cdb < SKK-JISYO.L
+
+Moreover, you can convert multiple dictionaries with supplementary
+script 'tools/convert.sh'.  Copy it into /usr/local/share/skk and
+execute it.
+
+# cp multiskkserv-200xxxxx/tools/convert.sh /usr/local/share/skk
+# cd /usr/local/share/skk
+# ./convert.sh
 
 
 4. Invoke server
@@ -107,8 +115,15 @@ E-mail: Hiroshi Takekawa <sian@big.or.jp>
 
 8. Acknowledgement
 
-Thanks to Mr. Eiji Obata <obata@suzuki.kuee.kyoto-u.ac.jp>:
+Thanks to Mr. Eiji Obata:
 
  He informed me that some header files are missing.  He also informed
  me that the same yomi entries from different dictionaries are not
  merged.
+
+
+Thanks to Mr. UTUMI Hirosi:
+
+ He was the first person to tell me that the latest SKK-JISYO.L cannot
+ be converted with skkdic-p2cdb, since some entries are too long.  He
+ also kindly created a package for Mandriva Cooker.

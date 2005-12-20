@@ -3,7 +3,7 @@
  * (C)Copyright 2001 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Dec  7 22:01:57 2001.
+ * Last Modified: Tue Dec 20 23:18:30 2005.
  * $Id$
  *
  * This software is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 
 #define SKKSERV_SERVICE      "skkserv"
 #define SKKSERV_WORD_SIZE    1023
-#define SKKSERV_RESULT_SIZE  2048
+#define SKKSERV_RESULT_SIZE  4096
 #define SKKSERV_REQUEST_SIZE (SKKSERV_WORD_SIZE + 1)
 
 #define SKKSERV_PORT         1178 /* can be specified by -p */

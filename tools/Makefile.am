@@ -2,6 +2,8 @@
 # Makefile.am for multiskkserv
 # $Id$
 
+EXTRA_DIST = convert.sh
+
 INCLUDES = @CDB_INCLUDES@ -I$(top_srcdir)
 
 bin_PROGRAMS = skkdic-p2cdb

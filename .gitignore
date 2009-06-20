@@ -24,3 +24,4 @@ ltmain.sh
 libtool
 .libs
 depcomp
+autom4te.cache

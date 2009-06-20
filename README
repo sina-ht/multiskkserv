@@ -1,0 +1,83 @@
+multiskkserv -- simple skk multi-dictionary server
+(C)Copyright 2001 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Mon Feb 12 04:26:55 2001.
+$Id$
+
+If you think my English is so bad, please correct.
+
+multiskkserv is the skk multi-dictionary server. This server can
+search multiple dictionaries and uses cdb format as the dictionary
+format. cdb is the constant(i.e. cannot add, modify) database format
+by Dan J. Bernstein, which I think is the appropriate format for
+system-wide constant dictionary storage.
+
+This is very experimental. Please send me bug reports, comments, and
+so on.
+
+1. Requirements
+
+pthread:
+ If you use libc5, install linuxthreads.
+ Probably, you can get it at
+ http://pauillac.inria.fr/~xleroy/linuxthreads/
+
+cdb-0.75:
+ At least, compile this package. Installing is not required, though it
+ may be useful.
+ Grab http://cr.yp.to/cdb/cdb-0.75.tar.gz
+ Unpack, change directory, run 'make it'.
+ Optionally, do 'make setup check'.
+
+2. Build and install
+
+Specify the directory where you unpacked cdb distribution by --with-cdb.
+
+% tar xvzf multiskkserv-2001xxxx.tar.gz
+% mkdir multiskkserv.build && cd multiskkserv.build
+% ../multiskkserv-2001xxxx/configure --with-cdb=/usr/src/cdb-0.75 && make
+% su
+# make install
+# exit
+% cd ..
+% rm -rf multiskkserv.build
+
+3. Convert dictionary
+
+'make install' installs two binaries: multiskkserv in sbin,
+skkdic-p2cdb in bin. skkdic-p2cdb converts plain text dictionary(such
+as SKK-JISYO.L) into cdb format. Usage is simple:
+
+% cd /usr/local/share/skk
+% skkdic-p2cdb SKK-JISYO.L.cdb < SKK-JISYO.L.cdb
+
+4. Invoke server
+
+Server usage is also simple:
+
+# /usr/local/sbin/multiskkserv /usr/local/share/skk/SKK-JISYO.L.cdb &
+
+NOTE: multiskkserv won't auto-detach itself, use &. 
+
+You can specify two or more dictionaries:
+
+# /usr/local/sbin/multiskkserv /usr/local/share/skk/SKK-JISYO.L.cdb /usr/local/share/skk/SKK-JISYO.zipcode.cdb &
+
+You can use this server from inetd or tcpserver. Use -n. (Sorry, untested.)
+
+inetd.conf:
+skkserv stream  tcp     nowait  nobody  /usr/sbin/tcpd /usr/local/sbin/multiskkserv -n /usr/local/share/skk/SKK-JISYO.L.cdb
+
+tcpserver:
+tcpserver -v -R 0 skkserv /usr/local/sbin/multiskkserv -n /usr/local/share/skk/SKK-JISYO.L.cdb
+
+For more options, try:
+
+% /usr/local/sbin/multiskkserv -h
+
+5. License
+
+This software is distributed under GPL2. See COPYING for more detail.
+
+6. Contact
+
+E-mail: Hiroshi Takekawa <sian@big.or.jp>

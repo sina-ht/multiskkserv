@@ -3,8 +3,7 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Dec  7 23:04:39 2001.
- * $Id$
+ * Last Modified: Wed Jan 27 05:56:36 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version

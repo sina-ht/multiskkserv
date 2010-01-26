@@ -3,8 +3,7 @@
  * (C)Copyright 2000, 2001 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Fri Dec  7 23:03:58 2001.
- * $Id$
+ * Last Modified: Wed Jan 27 05:56:24 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -33,7 +32,7 @@ typedef struct _option {
   const char *longopt; /* not supported so far */
   char opt;
   ArgumentRequirement argreq;
-  const unsigned char *description;
+  const char *description;
 } Option;
 
 char *gen_optstring(Option []);

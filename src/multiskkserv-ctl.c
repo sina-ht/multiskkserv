@@ -1,10 +1,9 @@
 /*
  * multiskkserv-ctl.c -- multiskkserv control utility
- * (C)Copyright 2001-2005 by Hiroshi Takekawa
+ * (C)Copyright 2001-2010 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Sat Oct  1 12:38:44 2005.
- * $Id$
+ * Last Modified: Wed Jan 27 09:02:38 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -63,6 +62,7 @@ static Option options[] = {
   { "server",   's', _REQUIRED_ARGUMENT, "Specify which ip to listen." },
   { "port",     'p', _REQUIRED_ARGUMENT, "Specify which port to listen." },
   { "family",   'f', _REQUIRED_ARGUMENT, "Specify address family: INET or INET6 or UNSPEC." },
+  { "yomi",     'y', _REQUIRED_ARGUMENT, "Specify yomi for translation test." },
   { NULL }
 };
 
@@ -185,10 +185,34 @@ show_stat(char *remote, int port, int family)
 }
 
 static void
+translate(char *remote, int port, int family, char *yomi)
+{
+  int sock;
+  char *sstr;
+  char rbuf[SKKSERV_REQUEST_SIZE];
+  int read_size;
+
+  if ((sock = socket_connect(remote, &sstr, port, (char *)SKKSERV_SERVICE, family)) < 0) {
+    err_message_fnc("Cannot make a connection.\n");
+    return;
+  }
+
+  snprintf(rbuf, sizeof(rbuf), "1%s ", yomi);
+  write(sock, rbuf, strlen(rbuf));
+  if ((read_size = read(sock, rbuf, sizeof(rbuf))) > 0) {
+    rbuf[read_size] = '\0';
+    printf("%s", rbuf);
+  }
+
+  free(sstr);
+  close(sock);
+}
+
+static void
 usage(void)
 {
   printf(PROGNAME "-ctl version " VERSION "\n");
-  printf("(C)Copyright 2001-2005 by Hiroshi Takekawa\n\n");
+  printf("(C)Copyright 2001-2010 by Hiroshi Takekawa\n\n");
   printf("usage: multiskkserv-ctl [options] ['stat']\n");
 
   printf("Options:\n");
@@ -202,6 +226,7 @@ main(int argc, char **argv)
   extern int optind;
   char *optstr;
   char *servername = NULL;
+  char *yomi = NULL;
   int ch;
   int port = -1;
   int family = AF_INET;
@@ -242,6 +267,9 @@ main(int argc, char **argv)
 	return INVALID_FAMILY_ERROR;
       }
       break;
+    case 'y':
+      yomi = strdup(optarg);
+      break;
     default:
       usage();
       return 0;
@@ -260,6 +288,11 @@ main(int argc, char **argv)
     if (!servername)
       servername = strdup("localhost");
     show_stat(servername, port, family);
+    free(servername);
+  } else if (strcasecmp(argv[optind], "tran") == 0 && yomi) {
+    if (!servername)
+      servername = strdup("localhost");
+    translate(servername, port, family, yomi);
     free(servername);
   } else {
     usage();

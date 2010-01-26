@@ -3,8 +3,7 @@
  * (C)Copyright 2000 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Mon Feb 12 00:21:00 2001.
- * $Id$
+ * Last Modified: Wed Jan 27 05:52:57 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -28,14 +27,14 @@ typedef struct _string String;
 struct _string {
   unsigned int len;
   unsigned int buffer_size;
-  unsigned char *buffer;
+  char *buffer;
 
-  unsigned char *(*get)(String *);
+  char *(*get)(String *);
   unsigned int (*length)(String *);
-  int (*set)(String *, const unsigned char *);
+  int (*set)(String *, const char *);
   int (*copy)(String *, String *);
-  int (*cat_ch)(String *, unsigned char);
-  int (*cat)(String *, const unsigned char *);
+  int (*cat_ch)(String *, char);
+  int (*cat)(String *, const char *);
   int (*append)(String *, String *);
   void (*shrink)(String *, unsigned int);
   String *(*dup)(String *);

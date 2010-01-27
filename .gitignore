@@ -2,7 +2,10 @@
 *.diff
 *.patch
 *.lo
+*.la
+*.o
 Makefile
+!tinycdb/Makefile
 Makefile.in
 config.cache
 config.guess

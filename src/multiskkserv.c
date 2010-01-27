@@ -1,10 +1,9 @@
 /*
  * multiskkserv.c -- simple skk multi-dictionary server
- * (C)Copyright 2001-2005 by Hiroshi Takekawa
+ * (C)Copyright 2001-2010 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Sat Oct  1 12:37:20 2005.
- * $Id$
+ * Last Modified: Wed Jan 27 15:16:41 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -80,6 +79,10 @@ typedef struct _dictionary {
   int fd;
   pthread_mutex_t mutex;
   struct cdb cdb;
+#if defined (USE_TINYCDB)
+  int first;
+  struct cdb_find cdb_find;
+#endif
 } Dictionary;
 
 typedef struct _connectionstat {
@@ -98,11 +101,16 @@ typedef struct _skkconnection {
   int out;
 } SkkConnection;
 
+#if defined(USE_TINYCDB)
+#define USE_CDB " with included tinycdb"
+#else
+#define USE_CDB " with external cdb"
+#endif
 static void
 usage(void)
 {
-  printf(PROGNAME " version " VERSION "\n");
-  printf("(C)Copyright 2001-2005 by Hiroshi Takekawa\n\n");
+  printf(PROGNAME " version " VERSION USE_CDB "\n");
+  printf("(C)Copyright 2001-2010 by Hiroshi Takekawa\n\n");
   printf("usage: multiskkserv [options] [path...]\n");
 
   printf("Options:\n");
@@ -233,6 +241,28 @@ open_dictionary(char *path)
   return dic;
 }
 
+static void __cdb_findstart(Dictionary *dic)
+{
+#if defined(USE_TINYCDB)
+  dic->first = 1;
+#else
+  cdb_findstart(&dic->cdb);
+#endif
+}
+
+static int __cdb_findnext(Dictionary *dic, void *key, unsigned int keylen)
+{
+#if defined(USE_TINYCDB)
+  if (dic->first) {
+    cdb_findinit(&dic->cdb_find, &dic->cdb, key, keylen);
+    dic->first = 0;
+  }
+  return cdb_findnext(&dic->cdb_find);
+#else
+  return cdb_findnext(&dic->cdb, key, keylen);
+#endif
+}
+
 /* Must be prime */
 #define HASH_SIZE 4099
 static void
@@ -255,8 +285,6 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
   memcpy(word, rbuf + 1, len);
   word[len] = '\0';
 
-  debug_message("%s: word %s\n", __FUNCTION__, word);
-
   word_hash = hash_create(HASH_SIZE);
   rlen = 1;
   ncandidates = 0;
@@ -265,8 +293,8 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
     Dictionary *dic = dlist_data(dd);
 
     pthread_mutex_lock(&dic->mutex);
-    cdb_findstart(&dic->cdb);
-    if ((r = cdb_findnext(&dic->cdb, word, len)) == -1) {
+    __cdb_findstart(dic);
+    if ((r = __cdb_findnext(dic, word, len)) == -1) {
       err_message_fnc("cdb_findnext() failed.\n");
       if (!ncandidates) {
 	rbuf[0] = SKKSERV_S_ERROR;
@@ -276,15 +304,19 @@ search_dictionaries(int out, Dlist *dic_list, char *rbuf)
       hash_destroy(word_hash);
       return;
     }
+    debug_message_fnc("word %s, len %d, r = %d\n", word, len, r);
     if (r) {
-      debug_message("%s: %s found(%d)\n", __FUNCTION__, word, ncandidates);
-      if (rlen + cdb_datalen(&dic->cdb) + 2 > SKKSERV_RESULT_SIZE) {
+      int dpos = cdb_datapos(&dic->cdb);
+      int dlen = cdb_datalen(&dic->cdb);
+      debug_message_fnc("%s found, r = %d, dpos = %d, dlen = %d.\n", word, r, dpos, dlen);
+      if (rlen + dlen + 2 > SKKSERV_RESULT_SIZE) {
 	err_message_fnc("Truncated: %s\n", word);
 	r = SKKSERV_RESULT_SIZE - rlen - 2;
       } else {
-	r = cdb_datalen(&dic->cdb);
+	r = dlen;
       }
-      if (cdb_read(&dic->cdb, tmpresult, r, cdb_datapos(&dic->cdb)) == -1) {
+      debug_message_fnc("read %d bytes\n", r);
+      if (cdb_read(&dic->cdb, tmpresult, r, dpos) == -1) {
 	if (!ncandidates) {
 	  err_message_fnc("cdb_read() failed.\n");
 	  rbuf[0] = SKKSERV_S_ERROR;
@@ -441,7 +473,7 @@ main(int argc, char **argv)
   ConnectionStat stat;
   char *optstr;
   char *servername = NULL;
-  char *serverstring;
+  char *serverstring = NULL;
   char *chrootdir = NULL;
   int i, ch;
   int port = -1;

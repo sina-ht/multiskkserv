@@ -1,14 +1,13 @@
 multiskkserv -- simple skk multi-dictionary server
-(C) Copyright 2001-2005 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Wed Dec 21 00:22:47 2005.
-$Id$
+(C) Copyright 2001-2010 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Wed Jan 27 10:12:14 2010.
 
 multiskkserv は複数の辞書を扱える辞書サーバです。 multiskkserv は辞書
 のフォーマットとして、 Dan J. Bernstein による固定データベース cdb を
 採用しています。この cdb は、システムにインストールされた固定辞書を保
 持するのに向いていると思われます。
 
-このソフトウェアは 4 年使用していますが、バグや要望等ありましたら、メー
+このソフトウェアは 9 年使用していますが、バグや要望等ありましたら、メー
 ルでお知らせください。
 
 
@@ -18,9 +17,10 @@ pthread:
  最近のシステムには libpthread が入っています。nptl でも linuxthreads
  でも動作するはずです。
 
-cdb-0.75:
- cdb のパッケージをインストールはしなくてもいいので、コンパイルだけし
- てください。インストールすればきっと役に立つとは思いますが。
+cdb-0.75 (オプション):
+ tinycdb がソースに含まれていて、デフォルトではそちらを使います。オリジナルの
+ cdb を使うには --with-cdb オプションを configure スクリプトに渡してください。
+
  http://cr.yp.to/cdb/cdb-0.75.tar.gz を入手して、
  展開し、その中に移動して、'make it'を実行してください。
  'make setup check'としてインストールすることもできます。
@@ -28,8 +28,8 @@ cdb-0.75:
 
 2. コンパイルおよびインストール
 
---with-cdb で cdb を展開しコンパイルしたディレクトリをフルパスで指定し
-てください。
+tinycdb を使わない場合は --with-cdb で cdb を展開しコンパイルしたディレクトリ
+をフルパスで指定してください。
 
 % tar xvzf multiskkserv-200xxxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build

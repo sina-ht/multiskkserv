@@ -1,10 +1,9 @@
 /*
  * skkdic-p2cdb.c -- convert plain skkdic to cdb.
- * (C)Copyright 2001-2005 by Hiroshi Takekawa
+ * (C)Copyright 2001-2010 by Hiroshi Takekawa
  * This file is part of multiskkserv.
  *
- * Last Modified: Tue Dec 20 23:17:15 2005.
- * $Id$
+ * Last Modified: Tue Jan 26 22:36:04 2010.
  *
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
@@ -26,13 +25,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <cdb_make.h>
-#include <cdb.h>
-
 #define REQUIRE_UNISTD_H
 #define REQUIRE_STRING_H
 #include "compat.h"
 #include "common.h"
+
+#if !defined(USE_TINYCDB)
+#include <cdb_make.h>
+#endif
+#include <cdb.h>
 
 #include "src/multiskkserv.h"
 #define LINE_SIZE (SKKSERV_WORD_SIZE + SKKSERV_RESULT_SIZE)
@@ -41,8 +42,7 @@ int
 main(int argc, char **argv)
 {
   struct cdb_make cdb;
-  uint32 h;
-  int i, fd;
+  int fd;
   char *sep;
   char buf[LINE_SIZE];
   char wbuf[SKKSERV_WORD_SIZE];
@@ -50,7 +50,7 @@ main(int argc, char **argv)
 
   if (argc != 2) {
     printf("skkdic-p2cdb version " VERSION "\n");
-    printf("(C)Copyright 2001-2005 by Hiroshi Takekawa\n\n");
+    printf("(C)Copyright 2001-2010 by Hiroshi Takekawa\n\n");
     printf("usage: %s outfile < infile\n", argv[0]);
     return 1;
   }
@@ -86,7 +86,7 @@ main(int argc, char **argv)
     wbuf[sep - buf] = '\0';
 
     if (strlen(sep + 1) > SKKSERV_RESULT_SIZE) {
-      err_message("too long entry, increase SKKSERV_RESULT_SIZE (%d -> %d): %s\n", SKKSERV_RESULT_SIZE, strlen(sep + 1), wbuf);
+      err_message("too long entry, increase SKKSERV_RESULT_SIZE (%d -> %ld): %s\n", SKKSERV_RESULT_SIZE, strlen(sep + 1), wbuf);
       return 11;
     }
     strcpy(rbuf, sep + 1);
@@ -94,23 +94,8 @@ main(int argc, char **argv)
     if (rbuf[strlen(rbuf) - 1] == '\n')
       rbuf[strlen(rbuf) - 1] = '\0';
 
-    if (cdb_make_addbegin(&cdb, strlen(wbuf), strlen(rbuf)) == -1) {
-      err_message("cdb_make_addbegin() failed.\n");
-      return 5;
-    }
-    if (buffer_puts(&cdb.b, wbuf) == -1) {
-      err_message("buffer_puts() failed.\n");
-      return 6;
-    }
-    h = CDB_HASHSTART;
-    for (i = 0; i < strlen(wbuf); i++)
-      h = cdb_hashadd(h, wbuf[i]);
-    if (buffer_puts(&cdb.b, rbuf) == -1) {
-      err_message("buffer_puts() failed.\n");
-      return 7;
-    }
-    if (cdb_make_addend(&cdb, strlen(wbuf), strlen(rbuf), h) == -1) {
-      err_message("cdb_make_addend() failed.\n");
+    if (cdb_make_add(&cdb, wbuf, strlen(wbuf), rbuf, strlen(rbuf)) == -1) {
+      err_message("cdb_make_add() failed.\n");
       return 8;
     }
   }

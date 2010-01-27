@@ -1,7 +1,6 @@
 multiskkserv -- simple skk multi-dictionary server
-(C)Copyright 2001-2005 by Hiroshi Takekawa <sian@big.or.jp>
-Last Modified: Wed Dec 21 00:22:22 2005.
-$Id$
+(C)Copyright 2001-2010 by Hiroshi Takekawa <sian@big.or.jp>
+Last Modified: Wed Jan 27 10:10:02 2010.
 
 If you think my English is too bad to read, please correct.
 
@@ -11,7 +10,7 @@ efficient and constant (i.e. cannot add, delete, modify) database
 format by Dan J. Bernstein, which I think is the appropriate format
 for the system-wide constant dictionary storage.
 
-This software has been tested for at least 4 years.  But if you find
+This software has been tested for at least 9 years.  But if you find
 any bugs, or have any suggestions, please send me an e-mail to report.
 
 
@@ -21,18 +20,21 @@ pthread:
  Modern systems have libpthread.  Whether nptl or linuxthreads will
  probably work.
 
-cdb-0.75:
- At least, compile this package.  Installing is not required, though
- it may be useful.
+cdb-0.75 (optional):
+ tinycdb is included and used by default.  If you'd like to use the original
+ cdb package, pass --with-cdb argument to configure script.  But note that I
+ cannot use it properly with 64 bit system.
+
  Grab http://cr.yp.to/cdb/cdb-0.75.tar.gz
  Unpack, change directory, and run 'make it' to compile.
  Optionally, do 'make setup check' to install.
+ Installing is not required, though it may be useful.
 
 
 2. Build and install
 
 Specify the full path of the directory where you unpacked cdb
-distribution by --with-cdb.
+distribution by --with-cdb when you choose not to use tinycdb.
 
 % tar xvzf multiskkserv-200xxxxx.tar.gz
 % mkdir multiskkserv.build && cd multiskkserv.build

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 # Makefile.am for multiskkserv
 
-SUBDIRS = lib src tools
+SUBDIRS = lib tinycdb src tools
 EXTRA_DIST = COPYING.j README.j common.h compat.h test/SKK-JISYO.S test/henkan-euc.txt test/henkandekinai-euc.txt test/ka-euc.txt test/kan-euc.txt test/kanji-euc.txt
 
 check:

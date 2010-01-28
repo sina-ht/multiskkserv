@@ -1,64 +1,235 @@
-2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* Makefile.am, NEWS, README, README.j, configure.in,
+	src/multiskkserv.c, tinycdb/.cvsignore, tinycdb/ChangeLog,
+	tinycdb/Makefile.am, tinycdb/Makefile.orig, tinycdb/NEWS,
+	tinycdb/cdb.1, tinycdb/cdb.3, tinycdb/cdb.5, tinycdb/cdb.h,
+	tinycdb/cdb_find.c, tinycdb/cdb_findnext.c, tinycdb/cdb_hash.c,
+	tinycdb/cdb_init.c, tinycdb/cdb_int.h, tinycdb/cdb_make.c,
+	tinycdb/cdb_make_add.c, tinycdb/cdb_make_put.c, tinycdb/cdb_seek.c,
+	tinycdb/cdb_seq.c, tinycdb/cdb_unpack.c, tools/skkdic-p2cdb.c: 
+	Imported tinycdb and make it default.  Imported tinycdb_0.77 and added support code for it.  Now tinycdb is
+	default.  The original cdb can still be selected.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* Makefile.am, test/SKK-JISYO.S, test/henkan-euc.txt,
+	test/henkandekinai-euc.txt, test/ka-euc.txt, test/kan-euc.txt,
+	test/kanji-euc.txt: Added simple tests.  Run 'make check' to test.  You need nkf.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* .gitignore: .gitignore: Added more patterns.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* src/multiskkserv-ctl.c: multiskkserv-ctl: Added translation test
+	support.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* src/getopt-support.c, src/getopt-support.h: getopt-support: Fixed
+	signedness.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* lib/libstring.c, lib/libstring.h: libstring: Fixed signedness.
+
+2010-01-27  Hiroshi Takekawa <sian@big.or.jp>
+
+	* ltmain.sh: ltmain.sh Updated to libtool 2.2.6b.
+
+2009-06-20  Hiroshi Takekawa <sian@big.or.jp>
+
+	* autogen.sh: Invoke autoheader.
+
+2009-06-20  Hiroshi Takekawa <sian@big.or.jp>
+
+	* config.guess, config.sub, ltmain.sh: Updated autotools.
+
+2009-06-20  Hiroshi Takekawa <sian@big.or.jp>
+
+	* .cvsignore, .gitignore, lib/.cvsignore, src/.cvsignore,
+	tools/.cvsignore: Renamed .cvsignore to .gitignore.
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Version up.
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* README, README.j: Updated.
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* src/multiskkserv.h: Increase SKKSERV_RESULT_SIZE: 2048->4096.
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* tools/skkdic-p2cdb.c: Use SKKSERV_WORD_SIZE, SKKSERV_RESULT_SIZE
+	of multiskkserv.h.  Unlink .cdb file first.  Use err_message().
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* tools/Makefile.am: Include convert.sh for distribution.
+
+2005-12-20  Hiroshi Takekawa <sian@fennel.org>
+
+	* tools/convert.sh: New file.
+
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.c: Use hash_define_value() instead of
 	hash_define(), which caused hash_destroy() to free() unallocated
 	value.
 
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
+
 	* src/multiskkserv-ctl.c: Use err_message_fnc().
 
-2005-10-01  Hiroshi Takekawa  <sian@fennel.org>
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* configure.in: Added --enable-warnings option.  Upgraded.
+
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* common.h, lib/dlist.c, lib/dlist.h, lib/hash.c, lib/hash.h,
 	src/multiskkserv-ctl.c, src/multiskkserv.c: New dlist and hash
 	implementation.
 
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
+
 	* tools/skkdic-p2cdb.c: Needs unistd.h.
+
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* config.guess, config.sub, ltmain.sh: Updated.
 
+2005-10-01  Hiroshi Takekawa <sian@fennel.org>
+
 	* autogen.sh: More sophisticated autogen.sh.
 
-2002-02-01  Hiroshi Takekawa  <sian@fennel.org>
+2002-02-01  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2002-02-01  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Clean up.
+
+2002-02-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv-ctl.c: Fixed segmentation fault without -s.
 
-2002-02-01  Hiroshi Takekawa  <sian@fennel.org>
+2002-02-01  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2002-02-01  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.c: The last fix introduced a new bug, returns
 	SKKSERV_S_FOUND with null string when no entry is found. Fixed to
 	return SKKSERV_S_NOT_FOUND.
 
-2002-01-31  Hiroshi Takekawa  <sian@fennel.org>
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Version up.
+
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.c: Merge the same yomi entries.
 
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
+
 	* lib/Makefile.am: Added hash table.
+
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
+
+	* README, README.j: Documentation updates.
+
+2002-01-31  Hiroshi Takekawa <sian@fennel.org>
 
 	* lib/hash.c, lib/hash.h: New files.
 
-2002-01-30  Hiroshi Takekawa  <sian@fennel.org>
+2002-01-30  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2002-01-30  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Version up.
+
+2002-01-30  Hiroshi Takekawa <sian@fennel.org>
+
+	* README, README.j: Added an acknowledgement.
+
+2002-01-30  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/Makefile.am: Added header files to be included...
 
-2002-01-12  Hiroshi Takekawa  <sian@fennel.org>
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
 
 	* README, README.j: Updated.
 
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Refined.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
+	* config.guess, config.sub, missing: Upgraded.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
 	* src/Makefile.am: Added getopt-support, multiskkserv-ctl.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.c: Use getopt-support.
 
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
 	* src/getopt-support.c, src/getopt-support.h: New files.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
 
 	* tools/Makefile.am: Renamed CDB_DIR to CDB_INCLUDES.
 
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
 	* src/multiskkserv-ctl.c: New file.
+
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
 
 	* src/multiskkserv.h: Separated declarations from multiskkserv.c.
 
+2002-01-12  Hiroshi Takekawa <sian@fennel.org>
+
 	* ltconfig, ltmain.sh: Upgraded libtool from 1.3.5 to 1.4.2.
+
+2001-03-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2001-03-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* configure.in: Version up.
 
 2001-03-13  Hiroshi Takekawa <sian@fennel.org>
 
@@ -66,30 +237,59 @@
 	snprintf() instead of sprintf(). Now listen() only AF_INET or
 	AF_INET6. More error reporting. Cosmetic changes.
 
-2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
 
-	* .cvsignore, lib/.cvsignore, src/.cvsignore, tools/.cvsignore:
+	* ChangeLog: Updated ChangeLog.
+
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* .cvsignore, lib/.cvsignore, src/.cvsignore, tools/.cvsignore: 
 	Added .cvsignore.
 
-2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
 
-	* src/multiskkserv.c: Fixed protocol errors. Implemented
-	connection statistics measurement. Implemented the connection
-	number control. Added -b option. Create threads detached when
-	daemon mode. Fixed the critical error that skkconn is not
-	duplicated, which is passed to a server thread.
+	* ChangeLog: Updated ChangeLog.
+
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* src/multiskkserv.c: Fixed protocol errors. Implemented connection
+	statistics measurement. Implemented the connection number control.
+	Added -b option. Create threads detached when daemon mode. Fixed the
+	critical error that skkconn is not duplicated, which is passed to a
+	server thread.
+
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
 
 	* configure.in: Compatibility and copyright notice.
+
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
 
 	* README, README.j: Instruct to specify the cdb directory with the
 	full path.
 
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
+
 	* config.h.in: Deleted an auto-generated file.
 
-2001-02-13  Hiroshi Takekawa  <sian@fennel.org>
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
+
+	* ChangeLog: Updated ChangeLog.
+
+2001-02-13  Hiroshi Takekawa <sian@fennel.org>
 
 	* autogen.sh: More sophisticated operation.
 
-2001-02-11  Hiroshi Takekawa  <sian@fennel.org>
+2009-06-20  Hiroshi Takekawa <sian@big.or.jp>
 
-	* multiskkserv -- simple skk multi-dictionary server
+	* AUTHORS, COPYING.j, Makefile.am, NEWS, README, README.j,
+	autogen.sh, common.h, compat.h, config.guess, config.h.in,
+	config.sub, configure.in, lib/Makefile.am, lib/dlist.c,
+	lib/dlist.h, lib/libstring.c, lib/libstring.h, ltconfig, ltmain.sh,
+	src/Makefile.am, src/getaddrinfo.c, src/getaddrinfo.h,
+	src/multiskkserv.c, stamp-h.in, tools/Makefile.am,
+	tools/skkdic-p2cdb.c: Initial commit.
+
+2001-02-10  Hiroshi Takekawa <sian@fennel.org>
+
+	* Initial revision
+
